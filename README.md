@@ -9,7 +9,7 @@
 ## Requirements
 - C++2a
 - Currently only works with gcc 10.
-- The only external dependency is fmtlib for output display but it isn't strictly necessary.
+- The only external dependency is `fmtlib` for output display but it isn't strictly necessary.
 
 ## Demo
 See https://godbolt.org/z/n86bjY
