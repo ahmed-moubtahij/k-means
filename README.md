@@ -34,6 +34,6 @@ Example use:
     print_clusters(k_means<3>(df, 50));
 A call to `kmn::k_means<K>(data_frame, n)` returns a range of `K` clusters formed through `n` update iterations (the higher the `n` the better the partitioning).
 
-A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an arithmetic type and `D` the point's dimensionality.
+A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an arithmetic type and `D` the point's dimensionality. `T` and `D` can be implicit through CTAD as shown in the above example. All data points must naturally have the same dimensionality.
 
 A `std::array<kmn::DataPoint<T, D>, SZ>` is currently the type expected of the input data range.
