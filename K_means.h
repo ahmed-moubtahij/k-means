@@ -66,6 +66,7 @@ struct DataPoint : private std::array<T, D> {
 //DataPoint deduction duide
 template<arithmetic T, typename... Us>
 DataPoint(T, Us...) -> DataPoint<T, sizeof...(Us) + 1>;
+
 //Aggregate template Cluster
 template<typename T, std::size_t D>
 struct Cluster{
@@ -86,6 +87,7 @@ auto sqr_distance(DataPoint<T1,D> const& dp1,
                           [](auto a, auto b){ return (a-b)*(a-b); }
                          );
 };
+
 //Function Object Comparator distance_from
 template<typename REF_PT_T, std::size_t D>
 struct distance_from{
