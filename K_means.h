@@ -112,6 +112,8 @@ template<std::ranges::input_range R1,
          typename Comp = std::ranges::less,
          typename Proj1 = std::identity,
          typename Proj2 = std::identity>
+//'r' should be a const& but a filter_view range argument wouldn't work
+//because filter_view's begin and end methods are non-const
 constexpr void dispatch(R1&& r, R2&& buckets,
                         F dispatcher, Comp comp = {},
                         Proj1 proj1 = {}, Proj2 proj2 = {})
