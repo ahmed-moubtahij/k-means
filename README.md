@@ -16,8 +16,8 @@ See https://godbolt.org/z/n86bjY
 
 Example use:
 
-    using std::array, kmn::DataPoint;
-    using kmn::print_clusters, kmn::k_means;
+    using fmt::print, std::array;
+    using kmn::DataPoint, kmn::print_clusters, kmn::k_means;
         
     auto const df = array{DataPoint(1, 2, 3),
                           DataPoint(4, 5, 6),
