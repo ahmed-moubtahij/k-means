@@ -94,6 +94,7 @@ struct distance_from{
     distance_from() = delete;
     distance_from& operator=(distance_from const&) = delete;
     constexpr distance_from(data_point_t const& pt) : m_pt{pt} {}
+    //TODO: DataPoint<auto, D> is a gcc extension, replace it.
     constexpr bool operator()(DataPoint<auto, D> const& c1,
                               DataPoint<auto, D> const& c2) const
     {
