@@ -38,7 +38,7 @@ struct DataPoint : private std::array<T, D> {
 
     constexpr DataPoint() noexcept = default;
     constexpr DataPoint& operator=(DataPoint const&) noexcept = default;
-    constexpr DataPoint(std::convertible_to<value_type> auto... coords) noexcept
+    constexpr DataPoint(std::convertible_to<value_type> auto ...coords) noexcept
         requires (sizeof...(coords) == D)
         : std::array<T, D>{coords...} {}
     
