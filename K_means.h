@@ -148,7 +148,7 @@ void update_satellites(auto&& clusters,
     
     for(auto&& [_, satellites]: FWD(clusters)) satellites.clear();
     //Dispatch every data point to the cluster whose centroid is closest
-    //TODO: Unclear at call site what dispatch is dispatching to
+    //TODO: Unclear at call site that dispatch is dispatching to satellites
     dispatch(data | rnv::filter(is_not_centroid),
              FWD(clusters), find_closest_centroid,
              [](auto const& pt){ return distance_from{pt}; },
