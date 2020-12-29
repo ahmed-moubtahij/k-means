@@ -11,9 +11,6 @@
 
 using fmt::print;
 
-template<typename ...Ts>
-[[deprecated]] constexpr bool print_type = true;
-
 namespace kmn{
 
 namespace rn = std::ranges;
