@@ -183,7 +183,7 @@ constexpr auto
 k_means(std::array<DataPoint<T, D>, SZ> const& data, std::size_t n)
 -> std::array<Cluster<T, D>, K>
 {
-    if (SZ < K) return {{}};
+    if (SZ < K or K < 2) return {{}};
 
     using cluster_t = Cluster<T, D>;
     std::array<cluster_t, K> clusters;
