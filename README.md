@@ -8,7 +8,7 @@
 
 ## Requirements
 - **C++2a**
-- Currently only works with **gcc 10** as msvc hasn't implemented std::ranges yet and clang's std::ranges/concepts seem to be yet incomplete.
+- **gcc 10**. `msvc` hasn't implemented `std::ranges` yet and `clang`'s `std::ranges`/`concepts` seem to be yet incomplete.
 - The only external dependency is `fmtlib` for output display but it isn't strictly necessary.
 
 ## Demo
