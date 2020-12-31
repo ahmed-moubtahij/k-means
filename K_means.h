@@ -11,6 +11,26 @@
 
 using fmt::print;
 
+template<typename ...Ts>
+[[deprecated]] constexpr bool print_type = true;
+
+//dispatch: Akin to a partition_copy with output to multiple ranges
+template<std::ranges::input_range R1,
+         std::ranges::input_range R2,
+         typename F,
+         typename Comp = std::ranges::less,
+         typename Proj1 = std::identity,
+         typename Proj2 = std::identity>
+constexpr void dispatch(R1&& r, R2&& buckets,
+                        F dispatcher, Comp comp = {},
+                        Proj1 proj1 = {}, Proj2 proj2 = {})
+{
+    for(auto&& e: FWD(r)){
+        auto& target_bucket = *dispatcher(FWD(buckets), comp(e), proj1);
+        std::invoke(proj2, target_bucket).push_back(e); //TODO: Generalization; push_back restricts to vectors?
+    }
+}
+
 namespace kmn{
 
 namespace rn = std::ranges;
@@ -38,7 +58,7 @@ struct DataPoint : private std::array<T, D> {
 
     constexpr DataPoint() noexcept = default;
     constexpr DataPoint& operator=(DataPoint const&) noexcept = default;
-    constexpr DataPoint(std::convertible_to<value_type> auto ...coords) noexcept
+    constexpr DataPoint(std::convertible_to<value_type> auto... coords) noexcept
         requires (sizeof...(coords) == D)
         : std::array<T, D>{coords...} {}
     
@@ -60,20 +80,24 @@ struct DataPoint : private std::array<T, D> {
         return res;
     }
 };
-//DataPoint deduction duide
+//DataPoint deduction guide
 template<arithmetic T, typename... Us>
 DataPoint(T, Us...) -> DataPoint<T, sizeof...(Us) + 1>;
 
 //Aggregate template Cluster
 template<typename T, std::size_t D>
 struct Cluster{
-    DataPoint<T, D> centroid;
-    std::vector<DataPoint<T, D>> satellites;
+    using centroid_t = DataPoint<T, D>;
+    using satellites_t = std::vector<DataPoint<T, D>>; 
+    
+    centroid_t centroid;    
+    satellites_t satellites;
 
     friend bool operator<=>(Cluster const&, Cluster const&) = default;
 };
 
-template<typename T1, typename T2, std::size_t D>
+//sqr_dist: computes square distance between two data points
+template<typename T1, std::size_t D, typename T2>
 auto sqr_distance(DataPoint<T1,D> const& dp1,
                   DataPoint<T2,D> const& dp2)
 {
@@ -84,19 +108,20 @@ auto sqr_distance(DataPoint<T1,D> const& dp1,
                           [](auto a, auto b){ return (a-b)*(a-b); }
                          );
 };
-
-//Function Object Comparator distance_from
-template<typename REF_PT_T, std::size_t D>
+//distance_from: Function Object Comparator
+//               of distances from two points to a reference point
+template<typename T, std::size_t D>
 struct distance_from{
-    using data_point_t = DataPoint<REF_PT_T, D>;
-    data_point_t m_pt;
+    using ref_point_t = DataPoint<T, D>;
+    ref_point_t m_pt;
     
     distance_from() = delete;
     distance_from& operator=(distance_from const&) = delete;
-    constexpr distance_from(data_point_t const& pt) : m_pt{pt} {}
-    //TODO: DataPoint<auto, D> is a gcc extension, replace it.
-    constexpr bool operator()(DataPoint<auto, D> const& c1,
-                              DataPoint<auto, D> const& c2) const
+    constexpr distance_from(ref_point_t const& pt) : m_pt{pt} {}
+    
+    template<typename U, typename V>
+    constexpr bool operator()(DataPoint<U, D> const& c1,
+                              DataPoint<V, D> const& c2) const
     {
         auto const dist_c1_pt = sqr_distance(c1, m_pt);
         auto const dist_c2_pt = sqr_distance(c2, m_pt);
@@ -106,29 +131,13 @@ struct distance_from{
     }
 };
 
-template<std::ranges::input_range R1,
-         std::ranges::input_range R2,
-         typename F,
-         typename Comp = std::ranges::less,
-         typename Proj1 = std::identity,
-         typename Proj2 = std::identity>
-//'r' should be a const& but a filter_view range argument wouldn't work
-//because filter_view's begin and end methods are non-const
-constexpr void dispatch(R1&& r, R2&& buckets,
-                        F dispatcher, Comp comp = {},
-                        Proj1 proj1 = {}, Proj2 proj2 = {})
-{
-    for(auto const& e: FWD(r)){
-        auto& target_bucket = *dispatcher(FWD(buckets), comp(e), proj1);
-        std::invoke(proj2, target_bucket).push_back(e);
-    }
-}
-
 template<typename T, std::size_t D, std::size_t K>
 auto init_centroids(auto&& clusters, auto const& data)
 {
     using cluster_t = Cluster<T, D>;    
-    auto centroids = FWD(clusters) | rnv::transform(&cluster_t::centroid);
+    // auto centroids = FWD(clusters) | rnv::transform(&cluster_t::centroid);
+    auto centroids = rnv::transform(FWD(clusters), &cluster_t::centroid);
+                    
     //Initialize centroids with a sample of K points from data
     rn::sample(data, centroids.begin(),
                K, std::mt19937{std::random_device{}()});
@@ -169,8 +178,8 @@ void update_centroids(auto const& clusters, auto&& centroids)
         return std::reduce(r.cbegin(), r.cend(), identity_element,
                            std::plus{}) / r.size();
     };        
-    auto const closest_to_mean = [&mean](auto const& r)
-    { return *rn::min_element(r, distance_from{ mean(r) }); };
+    auto const closest_to_mean = [&mean](auto const& sats_range)
+    { return *rn::min_element(sats_range, distance_from{ mean(sats_range) }); };
 
     auto constexpr has_satellites = [](auto const& cluster)
     { return not cluster.satellites.empty(); };
@@ -192,8 +201,9 @@ k_means(std::array<DataPoint<T, D>, SZ> const& data, std::size_t n)
     std::array<cluster_t, K> clusters;
     //A given cluster will have at most SZ satellites
     for(auto&& [_, sats] : clusters) sats.reserve(SZ);
-    
+
     auto centroids = init_centroids<T, D, K>(clusters, data);
+   
     //TODO: Unclear at call site which arg update_satellites updates
     update_satellites<T, D>(clusters, data, centroids);
     
@@ -221,11 +231,9 @@ int main(){
                           DataPoint(19, 20, 21),
                           DataPoint(22, 23, 24)};
     
-    print("INPUT data points:\n\n{}\n\n", df);
-    
     print("OUTPUT clusters:\n\n");
-    print_clusters(k_means<3>(df, 50));
-    // k_means<3>(df, 10);
+    print_clusters(k_means<4>(df, 50));
+    // k_means<4>(df, 10);
 
     return 0;
 }
