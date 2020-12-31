@@ -11,9 +11,6 @@
 
 using fmt::print;
 
-template<typename ...Ts>
-[[deprecated]] constexpr bool print_type = true;
-
 //dispatch: Akin to a partition_copy with output to multiple ranges
 template<std::ranges::input_range R1,
          std::ranges::input_range R2,
@@ -119,9 +116,9 @@ struct distance_from{
     distance_from& operator=(distance_from const&) = delete;
     constexpr distance_from(ref_point_t const& pt) : m_pt{pt} {}
     
-    template<typename U, typename V>
+    template<typename U>
     constexpr bool operator()(DataPoint<U, D> const& c1,
-                              DataPoint<V, D> const& c2) const
+                              DataPoint<U, D> const& c2) const
     {
         auto const dist_c1_pt = sqr_distance(c1, m_pt);
         auto const dist_c2_pt = sqr_distance(c2, m_pt);
