@@ -8,11 +8,11 @@
 
 ## Requirements
 - C++2a
-- Currently only works with gcc 10.
+- Currently only works with gcc 10 as msvc hasn't implemented std::ranges yet and clang's std::ranges/concepts seem to be yet incomplete.
 - The only external dependency is `fmtlib` for output display but it isn't strictly necessary.
 
 ## Demo
-See https://godbolt.org/z/h3r78x
+See https://godbolt.org/z/8Mdca5
 
 Example use:
 
