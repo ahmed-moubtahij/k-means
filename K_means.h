@@ -45,7 +45,7 @@ template<typename T>
 concept arithmetic = std::integral<T> or std::floating_point<T>;
 //Class template DataPoint
 template<arithmetic T, std::size_t D>
-struct DataPoint : private std::array<T, D> {
+struct DataPoint final : private std::array<T, D> {
     using typename std::array<T, D>::value_type;
     using std::array<T, D>::begin;
     using std::array<T, D>::end;
