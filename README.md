@@ -13,7 +13,7 @@
 - The only external dependency is `fmtlib` for output display but it isn't strictly necessary.
 
 ## Demo
-See https://godbolt.org/z/8Mdca5
+See https://godbolt.org/z/M9bMn7
 
 Example use:
 
