@@ -5,26 +5,33 @@
 #include <random>
 #include <numeric>
 #include <ranges>
+#include <span>
 #include <fmt/ranges.h>
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
 using fmt::print;
 
+template<typename ...Ts>
+[[deprecated]] constexpr bool print_type = true;
+
 //dispatch: Akin to a partition_copy with output to multiple ranges
+//src_range should be const& but ranges::views don't support const begin/end
 template<std::ranges::input_range R1,
          std::ranges::input_range R2,
          typename F,
          typename Comp = std::ranges::less,
          typename Proj1 = std::identity,
          typename Proj2 = std::identity>
-constexpr void dispatch(R1&& r, R2&& buckets,
-                        F dispatcher, Comp comp = {},
-                        Proj1 proj1 = {}, Proj2 proj2 = {})
+constexpr void dispatch(R1&& src_range,
+                        R2&& buckets, F dispatcher,
+                        Comp threeway_comp = {},
+                        Proj1 proj_bucket = {}, Proj2 proj_comp = {})
 {
-    for(auto&& e: FWD(r)){
-        auto& target_bucket = *dispatcher(FWD(buckets), comp(e), proj1);
-        std::invoke(proj2, target_bucket).push_back(e); //TODO: Generalization; push_back restricts to vectors?
+    for(auto&& e: FWD(src_range)){
+        auto& target_bucket = *dispatcher(FWD(buckets), threeway_comp(e), proj_comp);
+        //TODO: Generalization? push_back restricts to vectors
+        std::invoke(proj_bucket, target_bucket).push_back(e);
     }
 }
 
@@ -132,8 +139,7 @@ template<typename T, std::size_t D, std::size_t K>
 auto init_centroids(auto&& clusters, auto const& data)
 {
     using cluster_t = Cluster<T, D>;    
-    // auto centroids = FWD(clusters) | rnv::transform(&cluster_t::centroid);
-    auto centroids = rnv::transform(FWD(clusters), &cluster_t::centroid);
+    auto centroids = FWD(clusters) | rnv::transform(&cluster_t::centroid);
                     
     //Initialize centroids with a sample of K points from data
     rn::sample(data, centroids.begin(),
@@ -142,25 +148,33 @@ auto init_centroids(auto&& clusters, auto const& data)
 }
 
 template<typename T, std::size_t D>
-void update_satellites(auto&& clusters,
-                       auto const& data,
+void update_satellites(auto const& data,
+                       auto&& clusters,
                        auto const& centroids)
 {
     using cluster_t = Cluster<T, D>;
+    
+    rn::for_each(clusters,
+                 [](auto&& satellites){ FWD(satellites).clear();},
+                 &cluster_t::satellites);
+    
     auto constexpr find_closest_centroid =
-    [](auto&& clusters, auto comp, auto proj)
+    [](auto&& clusters, auto comp, auto proj = std::identity{})
     { return rn::min_element(FWD(clusters), comp, proj); };
+
+    auto constexpr comp_dist_to_centroid =
+    [](auto const& data_pt){ return distance_from{data_pt}; };
 
     auto const is_not_centroid = [&centroids](auto const& pt)
     { return rn::find(centroids, pt) == centroids.end();};
-    
-    for(auto&& [_, satellites]: FWD(clusters)) satellites.clear();
+
     //Dispatch every data point to the cluster whose centroid is closest
-    //TODO: Unclear at call site that dispatch is dispatching to satellites
+    //TODO: Find a minimized use case for dispatch to present it for discussion
     dispatch(data | rnv::filter(is_not_centroid),
-             FWD(clusters), find_closest_centroid,
-             [](auto const& pt){ return distance_from{pt}; },
-             &cluster_t::centroid, &cluster_t::satellites);
+             FWD(clusters), 
+             find_closest_centroid, comp_dist_to_centroid,
+             &cluster_t::satellites, &cluster_t::centroid);
+    
 }
 
 template<typename T, std::size_t D>
@@ -186,8 +200,8 @@ void update_centroids(auto const& clusters, auto&& centroids)
                   closest_to_mean, &cluster_t::satellites);
 }
 
-template<std::size_t K, arithmetic T,
-        std::size_t SZ, std::size_t D>
+template<std::size_t K, std::size_t SZ,
+         arithmetic T, std::size_t D>
 constexpr auto
 k_means(std::array<DataPoint<T, D>, SZ> const& data, std::size_t n)
 -> std::array<Cluster<T, D>, K>
@@ -201,13 +215,13 @@ k_means(std::array<DataPoint<T, D>, SZ> const& data, std::size_t n)
 
     auto centroids = init_centroids<T, D, K>(clusters, data);
    
-    //TODO: Unclear at call site which arg update_satellites updates
-    update_satellites<T, D>(clusters, data, centroids);
+    //TODO: Is sending both clusters and centroids needed?
+    update_satellites<T, D>(data, clusters, centroids);
     
     while(n--)
     {
         update_centroids<T, D>(clusters, centroids);
-        update_satellites<T, D>(clusters, data, centroids);
+        update_satellites<T, D>(data, clusters, centroids);
     }
     
     return clusters;
@@ -218,7 +232,7 @@ k_means(std::array<DataPoint<T, D>, SZ> const& data, std::size_t n)
 int main(){
     using std::array, kmn::DataPoint;
     using kmn::print_clusters, kmn::k_means;
-    
+
     auto const df = array{DataPoint(1, 2, 3),
                           DataPoint(4, 5, 6),
                           DataPoint(7, 8, 9),
@@ -229,8 +243,7 @@ int main(){
                           DataPoint(22, 23, 24)};
     
     print("OUTPUT clusters:\n\n");
-    print_clusters(k_means<4>(df, 50));
-    // k_means<4>(df, 10);
+    print_clusters(k_means<4>(df, 100));
 
     return 0;
 }
