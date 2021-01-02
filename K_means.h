@@ -39,7 +39,7 @@ void print_clusters(auto const& clusters)
 {
     for(auto const& [centroid, satellites]: clusters){
         print("centroid: {}\nsatellites: {}\n\n",
-                   centroid, satellites);
+               centroid, satellites);
     }
 }
 
