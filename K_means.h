@@ -5,11 +5,18 @@
 #include <random>
 #include <numeric>
 #include <ranges>
+#include <span>
 #include <fmt/ranges.h>
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
 using fmt::print;
+
+//TODO: Find a minimized use case for dispatch to present it for discussion
+//      Dispatch generalization e.g. push_back restricts to vectors
+
+template<typename ...Ts>
+[[deprecated]] constexpr bool print_type = true;
 
 //dispatch: Akin to a partition_copy with output to multiple ranges
 //src_range should be const& but ranges::views don't support const begin/end
@@ -26,7 +33,6 @@ constexpr void dispatch(R1&& src_range,
 {
     for(auto&& e: FWD(src_range)){
         auto& target_bucket = *dispatcher(FWD(buckets), threeway_comp(e), proj_comp);
-        //TODO: Generalization? push_back restricts to vectors
         std::invoke(proj_bucket, target_bucket).push_back(e);
     }
 }
@@ -144,9 +150,8 @@ auto init_centroids(auto&& clusters, auto const& data)
 }
 
 template<typename T, std::size_t D>
-void update_satellites(auto const& data,
-                       auto&& clusters,
-                       auto const& centroids)
+void update_satellites(auto&& non_centroid_data,
+                       auto&& clusters)
 {
     using cluster_t = Cluster<T, D>;
     
@@ -161,12 +166,8 @@ void update_satellites(auto const& data,
     auto constexpr comp_dist_to_centroid =
     [](auto const& data_pt){ return distance_from{data_pt}; };
 
-    auto const is_not_centroid = [&centroids](auto const& pt)
-    { return rn::find(centroids, pt) == centroids.end();};
-
     //Dispatch every data point to the cluster whose centroid is closest
-    //TODO: Find a minimized use case for dispatch to present it for discussion
-    dispatch(data | rnv::filter(is_not_centroid),
+    dispatch(FWD(non_centroid_data),
              FWD(clusters), 
              find_closest_centroid, comp_dist_to_centroid,
              &cluster_t::satellites, &cluster_t::centroid);
@@ -207,17 +208,20 @@ k_means(std::array<DataPoint<T, D>, SZ> const& data, std::size_t n)
     using cluster_t = Cluster<T, D>;
     std::array<cluster_t, K> clusters;
     //A given cluster will have at most SZ satellites
-    for(auto&& [_, sats] : clusters) sats.reserve(SZ);
+    rn::for_each(clusters,
+                 [](auto&& satellites){FWD(satellites).reserve(SZ); },
+                 &cluster_t::satellites);
 
     auto centroids = init_centroids<T, D, K>(clusters, data);
+        
+    auto const is_not_centroid = [&centroids](auto const& pt)
+    { return rn::find(centroids, pt) == centroids.end();};
    
-    //TODO: Is sending both clusters and centroids needed?
-    update_satellites<T, D>(data, clusters, centroids);
-    
-    while(n--)
-    {
+    update_satellites<T, D>(data | rnv::filter(is_not_centroid), clusters);
+
+    while(n--){
         update_centroids<T, D>(clusters, centroids);
-        update_satellites<T, D>(data, clusters, centroids);
+        update_satellites<T, D>(data | rnv::filter(is_not_centroid), clusters);
     }
     
     return clusters;
