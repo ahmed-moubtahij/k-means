@@ -5,18 +5,11 @@
 #include <random>
 #include <numeric>
 #include <ranges>
-#include <span>
 #include <fmt/ranges.h>
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
 using fmt::print;
-
-//TODO: Find a minimized use case for dispatch to present it for discussion
-//      Dispatch generalization e.g. push_back restricts to vectors
-
-template<typename ...Ts>
-[[deprecated]] constexpr bool print_type = true;
 
 //dispatch: Akin to a partition_copy with output to multiple ranges
 //src_range should be const& but ranges::views don't support const begin/end
