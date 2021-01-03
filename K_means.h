@@ -70,7 +70,7 @@ struct DataPoint final : private std::array<T, D> {
         return res;
     }
 
-    constexpr auto operator/(arithmetic auto n)
+    constexpr auto operator/(arithmetic auto n) const
     {
         DataPoint<double, D> res;
         rn::transform(*this, res.begin(),
