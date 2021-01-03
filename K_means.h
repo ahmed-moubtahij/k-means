@@ -143,8 +143,8 @@ auto init_centroids(auto&& clusters, auto const& data)
 }
 
 template<typename T, std::size_t D>
-void update_satellites(auto&& non_centroid_data,
-                       auto&& clusters)
+void update_satellites(auto&& clusters,
+                       auto&& non_centroid_data)
 {
     using cluster_t = Cluster<T, D>;
     
@@ -168,7 +168,7 @@ void update_satellites(auto&& non_centroid_data,
 }
 
 template<typename T, std::size_t D>
-void update_centroids(auto const& clusters, auto&& centroids)
+void update_centroids(auto&& clusters)
 {
     using cluster_t = Cluster<T, D>;
     
@@ -179,14 +179,17 @@ void update_centroids(auto const& clusters, auto&& centroids)
         return std::reduce(r.cbegin(), r.cend(), identity_element,
                            std::plus{}) / r.size();
     };        
+    
     auto const closest_to_mean = [&mean](auto const& sats_range)
     { return *rn::min_element(sats_range, distance_from{ mean(sats_range) }); };
 
     auto constexpr has_satellites = [](auto const& cluster)
     { return not cluster.satellites.empty(); };
+    
+    auto&& centroids = FWD(clusters) | rnv::transform(&cluster_t::centroid);
     //Update every centroid with its satellites mean
-    rn::transform(clusters | rnv::filter(has_satellites),
-                  FWD(centroids).begin(),
+    rn::transform(FWD(clusters) | rnv::filter(has_satellites),
+                  centroids.begin(),
                   closest_to_mean, &cluster_t::satellites);
 }
 
@@ -208,13 +211,13 @@ k_means(std::array<DataPoint<T, D>, SZ> const& data, std::size_t n)
     auto centroids = init_centroids<T, D, K>(clusters, data);
         
     auto const is_not_centroid = [&centroids](auto const& pt)
-    { return rn::find(centroids, pt) == centroids.end();};
+    { return rn::find(centroids, pt) == centroids.end(); };
    
-    update_satellites<T, D>(data | rnv::filter(is_not_centroid), clusters);
+    update_satellites<T, D>(clusters, data | rnv::filter(is_not_centroid));
 
     while(n--){
-        update_centroids<T, D>(clusters, centroids);
-        update_satellites<T, D>(data | rnv::filter(is_not_centroid), clusters);
+        update_centroids<T, D>(clusters);
+        update_satellites<T, D>(clusters, data | rnv::filter(is_not_centroid));
     }
     
     return clusters;
@@ -233,7 +236,13 @@ int main(){
                           DataPoint(13, 14, 15),
                           DataPoint(16, 17, 18),
                           DataPoint(19, 20, 21),
-                          DataPoint(22, 23, 24)};
+                          DataPoint(22, 23, 24),
+                          DataPoint(25, 26, 27),
+                          DataPoint(28, 29, 30),
+                          DataPoint(31, 32, 33),
+                          DataPoint(34, 35, 36),
+                          DataPoint(37, 38, 39),
+                          DataPoint(40, 41, 42)};
     
     print("OUTPUT clusters:\n\n");
     print_clusters(k_means<4>(df, 100));
