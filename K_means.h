@@ -91,8 +91,6 @@ struct Cluster{
     
     centroid_t centroid;    
     satellites_t satellites;
-
-    friend bool operator<=>(Cluster const&, Cluster const&) = default;
 };
 
 //sqr_dist: computes square distance between two data points
