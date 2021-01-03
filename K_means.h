@@ -248,4 +248,4 @@ int main(){
     return 0;
 }
 //My thanks to the #includecpp Discord's folk:
-//Sarah, Léo, marcorubini, oktal
+//Sarah, Léo, marcorubini and oktal
