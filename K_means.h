@@ -11,8 +11,8 @@
 
 using fmt::print;
 
-//dispatch: Akin to a partition_copy with output to multiple ranges
-//src_range should be const& but ranges::views don't support const begin/end
+//dispatch: Akin to a partition_copy albeit with a multiple outcomes criterion mapping to multiple ranges
+//Note: src_range should be const& but ranges::views don't support const begin/end
 template<std::ranges::input_range R1,
          std::ranges::input_range R2,
          typename F,
