@@ -1,4 +1,3 @@
-## K_means clustering
 ![alt text](https://i.redd.it/g16w49p2hw661.png)
 ## Requirements
 - **C++2a**
