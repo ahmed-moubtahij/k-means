@@ -174,8 +174,8 @@ void update_centroids(auto&& clusters)
     {   auto constexpr identity_element =
         typename std::remove_cvref_t<decltype(r)>::value_type();
         
-        return std::reduce(r.cbegin(), r.cend(), identity_element,
-                           std::plus{}) / r.size();
+        return std::reduce(std::cbegin(r), std::cend(r), identity_element,
+                           std::plus{}) / sd::size(r);
     };        
     
     auto const closest_to_mean = [&mean](auto const& sats_range)
