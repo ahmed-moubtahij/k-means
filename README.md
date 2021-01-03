@@ -29,7 +29,6 @@ Example use:
     
     print("OUTPUT clusters:\n\n");
     print_clusters(k_means<4>(df, 100));
- ## Output display:
 ```
 OUTPUT clusters:
 
