@@ -203,7 +203,7 @@ k_means(std::array<DataPoint<T, D>, SZ> const& data, std::size_t n)
     std::array<cluster_t, K> clusters;
     //A given cluster will have at most SZ satellites
     rn::for_each(clusters,
-                 [](auto&& satellites){FWD(satellites).reserve(SZ); },
+                 [](auto&& satellites){ FWD(satellites).reserve(SZ); },
                  &cluster_t::satellites);
 
     auto centroids = init_centroids<T, D, K>(clusters, data);
