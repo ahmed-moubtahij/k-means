@@ -247,5 +247,5 @@ int main(){
 
     return 0;
 }
-//My thanks to the #includecpp Discord's folk:
+//My thanks to the #includecpp Discord's folk for teaching me so much about C++:
 //Sarah, Léo, marcorubini and oktal
