@@ -66,7 +66,7 @@ struct DataPoint final : private std::array<T, D> {
     constexpr auto operator+(DataPoint const& rhs) const
     {
         DataPoint res;
-        rn::transform(rhs, (*this), res.begin(), std::plus{});
+        rn::transform(rhs, *this, res.begin(), std::plus{});
         return res;
     }
 
