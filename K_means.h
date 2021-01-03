@@ -66,16 +66,16 @@ struct DataPoint final : private std::array<T, D> {
     constexpr auto operator+(DataPoint const& rhs) const
     {
         DataPoint res;
-        for(std::size_t i{}; i < D; ++i)
-            res[i] = rhs[i] + (*this)[i];
+        rn::transform(rhs, (*this), res.begin(), std::plus{});
         return res;
     }
 
     constexpr auto operator/(arithmetic auto n)
     {
         DataPoint<double, D> res;
-        for(std::size_t i{}; i < D; ++i)
-            res[i] = (*this)[i] / static_cast<double>(n);
+        rn::transform(*this, res.begin(),
+                      [&n](auto const& e)
+                      { return e / static_cast<double>(n); });
         return res;
     }
 };
