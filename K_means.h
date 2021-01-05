@@ -111,8 +111,8 @@ auto sqr_distance(DataPoint<T1,D> const& dp1,
     return
     std::transform_reduce(dp1.cbegin(), dp1.cend(),
                           dp2.cbegin(), 0,
-                          [](auto a, auto b){ return a+b; },
-                          [](auto a, auto b){ return (a-b)*(a-b); }
+                          [](auto a, auto b){ return a + b; },
+                          [](auto a, auto b){ return (a - b) * (a - b); }
                          );
 };
 //distance_from: Function Object Comparator
