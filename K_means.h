@@ -11,8 +11,8 @@
 
 using fmt::print;
 
-//dispatch: Akin to a partition_copy albeit with a multiple outcomes criterion mapping to multiple ranges
-//Note: src_range should be const& but ranges::views don't support const begin/end
+//dispatch: Akin to a partition_copy with output to multiple ranges
+//src_range should be const& but ranges::views don't support const begin/end
 template<std::ranges::input_range R1,
          std::ranges::input_range R2,
          typename F,
@@ -56,6 +56,7 @@ struct DataPoint final : private std::array<T, D> {
     using std::array<T, D>::operator[];
 
     constexpr DataPoint() noexcept = default;
+    constexpr DataPoint(DataPoint const&) noexcept = default;
     constexpr DataPoint& operator=(DataPoint const&) noexcept = default;
     constexpr DataPoint(std::convertible_to<value_type> auto... coords) noexcept
         requires (sizeof...(coords) == D)
@@ -78,6 +79,15 @@ struct DataPoint final : private std::array<T, D> {
                       { return e / static_cast<double>(n); });
         return res;
     }
+
+    constexpr explicit operator DataPoint<double, D>() const
+    {
+        DataPoint<double, D> res;
+        rn::transform(*this, res.begin(),
+                      [](auto const& num)
+                      { return static_cast<double>(num); });
+        return res;
+    }
 };
 //DataPoint deduction guide
 template<arithmetic T, typename... Us>
@@ -86,7 +96,7 @@ DataPoint(T, Us...) -> DataPoint<T, sizeof...(Us) + 1>;
 //Aggregate template Cluster
 template<typename T, std::size_t D>
 struct Cluster{
-    using centroid_t = DataPoint<T, D>;
+    using centroid_t = DataPoint<double, D>;
     using satellites_t = std::vector<DataPoint<T, D>>; 
     
     centroid_t centroid;    
@@ -133,10 +143,18 @@ auto init_centroids(auto&& clusters, auto const& data)
 {
     using cluster_t = Cluster<T, D>;    
     auto centroids = FWD(clusters) | rnv::transform(&cluster_t::centroid);
-                    
     //Initialize centroids with a sample of K points from data
-    rn::sample(data, centroids.begin(),
-               K, std::mt19937{std::random_device{}()});
+    if constexpr(std::floating_point<T>){
+        rn::sample(data, centroids.begin(),
+                   K, std::mt19937{std::random_device{}()});
+    } else { //data is a range of DataPoints of integral value types T
+        //centroids get updated with data points' means so they are floating point types
+        rn::sample(data |
+                   rnv::transform([](auto const& pt)
+                   { return static_cast<DataPoint<double, D>>(pt); }),
+                   centroids.begin(),
+                   K, std::mt19937{std::random_device{}()});
+    }
     return centroids;
 }
 
@@ -171,16 +189,8 @@ void update_centroids(auto&& clusters)
     using cluster_t = Cluster<T, D>;
     
     auto constexpr mean = [](auto const& r)
-    {   auto constexpr identity_element =
-        typename std::remove_cvref_t<decltype(r)>::value_type();
-        
-        return std::reduce(std::cbegin(r), std::cend(r), identity_element,
-                           std::plus{}) / sd::size(r);
-    };        
+    { return std::reduce(r.cbegin(), r.cend()) / r.size(); };
     
-    auto const closest_to_mean = [&mean](auto const& sats_range)
-    { return *rn::min_element(sats_range, distance_from{ mean(sats_range) }); };
-
     auto constexpr has_satellites = [](auto const& cluster)
     { return not cluster.satellites.empty(); };
     
@@ -188,7 +198,7 @@ void update_centroids(auto&& clusters)
     //Update every centroid with its satellites mean
     rn::transform(FWD(clusters) | rnv::filter(has_satellites),
                   centroids.begin(),
-                  closest_to_mean, &cluster_t::satellites);
+                  mean, &cluster_t::satellites);
 }
 
 template<std::size_t K, std::size_t SZ,
@@ -203,13 +213,13 @@ k_means(std::array<DataPoint<T, D>, SZ> const& data, std::size_t n)
     std::array<cluster_t, K> clusters;
     //A given cluster will have at most SZ satellites
     rn::for_each(clusters,
-                 [](auto&& satellites){ FWD(satellites).reserve(SZ); },
+                 [](auto&& satellites){FWD(satellites).reserve(SZ); },
                  &cluster_t::satellites);
 
     auto centroids = init_centroids<T, D, K>(clusters, data);
         
     auto const is_not_centroid = [&centroids](auto const& pt)
-    { return rn::find(centroids, pt) == centroids.end(); };
+    { return rn::find(centroids, static_cast<DataPoint<double, D>>(pt)) == centroids.end(); };
    
     update_satellites<T, D>(clusters, data | rnv::filter(is_not_centroid));
 
@@ -227,23 +237,22 @@ int main(){
     using std::array, kmn::DataPoint;
     using kmn::print_clusters, kmn::k_means;
 
-    auto const df = array{DataPoint(1, 2, 3),
-                          DataPoint(4, 5, 6),
-                          DataPoint(7, 8, 9),
-                          DataPoint(10, 11, 12),
-                          DataPoint(13, 14, 15),
-                          DataPoint(16, 17, 18),
-                          DataPoint(19, 20, 21),
-                          DataPoint(22, 23, 24),
-                          DataPoint(25, 26, 27),
-                          DataPoint(28, 29, 30),
-                          DataPoint(31, 32, 33),
-                          DataPoint(34, 35, 36),
-                          DataPoint(37, 38, 39),
-                          DataPoint(40, 41, 42)};
-    
+    auto const integral_df = array{DataPoint(1, 2, 3),
+                                   DataPoint(4, 5, 6),
+                                   DataPoint(7, 8, 9),
+                                   DataPoint(10, 11, 12),
+                                   DataPoint(13, 14, 15),
+                                   DataPoint(16, 17, 18),
+                                   DataPoint(19, 20, 21),
+                                   DataPoint(22, 23, 24),
+                                   DataPoint(25, 26, 27),
+                                   DataPoint(28, 29, 30),
+                                   DataPoint(31, 32, 33),
+                                   DataPoint(34, 35, 36),
+                                   DataPoint(37, 38, 39),
+                                   DataPoint(40, 41, 42)};
     print("OUTPUT clusters:\n\n");
-    print_clusters(k_means<4>(df, 100));
+    print_clusters(k_means<4>(integral_df, 100));
 
     return 0;
 }
