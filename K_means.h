@@ -169,7 +169,7 @@ void update_satellites(auto&& clusters,
                  &cluster_t::satellites);
     
     auto constexpr find_closest_centroid =
-    [](auto&& clusters, auto comp, auto proj = std::identity{})
+    [](auto&& clusters, auto comp, auto proj)
     { return rn::min_element(FWD(clusters), comp, proj); };
 
     auto constexpr comp_dist_to_centroid =
