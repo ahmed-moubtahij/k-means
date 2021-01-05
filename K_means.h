@@ -124,7 +124,7 @@ struct distance_from{
     
     distance_from() = delete;
     distance_from& operator=(distance_from const&) = delete;
-    constexpr distance_from(ref_point_t const& pt) : m_pt{pt} {}
+    constexpr distance_from(ref_point_t const& pt) : m_pt{ pt } {}
     
     template<typename U>
     constexpr bool operator()(DataPoint<U, D> const& c1,
