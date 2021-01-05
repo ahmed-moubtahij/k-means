@@ -165,7 +165,7 @@ void update_satellites(auto&& clusters,
     using cluster_t = Cluster<T, D>;
     
     rn::for_each(clusters,
-                 [](auto&& satellites){ FWD(satellites).clear();},
+                 [](auto&& satellites){ FWD(satellites).clear(); },
                  &cluster_t::satellites);
     
     auto constexpr find_closest_centroid =
@@ -173,7 +173,7 @@ void update_satellites(auto&& clusters,
     { return rn::min_element(FWD(clusters), comp, proj); };
 
     auto constexpr comp_dist_to_centroid =
-    [](auto const& data_pt){ return distance_from{data_pt}; };
+    [](auto const& data_pt){ return distance_from{ data_pt }; };
 
     //Dispatch every data point to the cluster whose centroid is closest
     dispatch(FWD(non_centroid_data),
