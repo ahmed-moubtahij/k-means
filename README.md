@@ -5,6 +5,9 @@
     - `msvc` hasn't implemented `std::ranges` yet and `clang`'s `std::ranges`/`concepts` seem to be yet incomplete.
 - The only external dependency is `fmtlib` for output display but it isn't strictly necessary.
 
+## Intent
+At the time of writing this, I'm an undergrad in Systems Engineering, and this is intended as a practice project that ideally eventually evolves into something useful.
+
 ## Demo
 See https://godbolt.org/z/hxbrTz (code may not be up to date with the latest version).
 
