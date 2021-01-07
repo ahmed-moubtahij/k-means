@@ -9,8 +9,6 @@
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
-//TODO: the std::array overload should be a std::span (also readup on diff with contiguous_range)
-
 //sarah notes:
 // instead of using the range member functions, you should be using the std::ranges::* function objects
 // for instance rn::begin(*) instead of *.begin()
@@ -21,6 +19,7 @@
 
 //TODO: marcorubini's function object wrapper implementation
 //TODO: Lesley Lai's non-generic lambdas
+//TODO: When to std::move?
 
 using fmt::print;
 
@@ -51,9 +50,9 @@ namespace kmn{
 namespace rn = std::ranges;
 namespace rnv = rn::views;
 
-void print_clusters(auto const& clusters)
+void print_clusters(auto const& clusters, std::size_t k)
 {
-    for(auto const& [centroid, satellites]: clusters){
+    for(auto const& [centroid, satellites]: clusters | rnv::take(k)){
         print("centroid: {}\nsatellites: {}\n\n",
                centroid, satellites);
     }
@@ -155,15 +154,16 @@ struct distance_from{
     }
 };
 
-template<typename T, std::size_t D, std::size_t K>
-auto init_centroids(auto&& clusters, auto const& data_points)
+template<typename T, std::size_t D>
+auto init_centroids(auto&& out_clusters, auto const& data_points)
 {
     using cluster_t = Cluster<T, D>;    
-    auto centroids = FWD(clusters) | rnv::transform(&cluster_t::centroid);
+    auto centroids = FWD(out_clusters) | rnv::transform(&cluster_t::centroid);
+    auto const k = rn::distance(out_clusters);
     //Initialize centroids with a sample of K points from data_points
     if constexpr(std::floating_point<T>){
         rn::sample(data_points, centroids.begin(),
-                   K, std::mt19937{std::random_device{}()});
+                   k, std::mt19937{std::random_device{}()});
     } else { //else, data_points is a range of DataPoints of integral value types T
         //T needs to be a floating point type to match centroids' T,
         //that is because centroids get updated with data_points' means
@@ -171,7 +171,7 @@ auto init_centroids(auto&& clusters, auto const& data_points)
                    rnv::transform([](auto const& pt)
                    { return static_cast<DataPoint<double, D>>(pt); }),
                    centroids.begin(),
-                   K, std::mt19937{std::random_device{}()});
+                   k, std::mt19937{std::random_device{}()});
     }
     return centroids;
 }
@@ -202,7 +202,7 @@ void update_satellites(auto&& clusters,
 }
 
 template<typename T, std::size_t D>
-void update_centroids(auto&& clusters)
+void update_centroids(auto&& out_clusters)
 {
     using cluster_t = Cluster<T, D>;
     
@@ -212,86 +212,61 @@ void update_centroids(auto&& clusters)
     auto constexpr has_satellites = [](auto const& cluster)
     { return not cluster.satellites.empty(); };
     
-    auto&& centroids = FWD(clusters) | rnv::transform(&cluster_t::centroid);
+    auto&& centroids = FWD(out_clusters) | rnv::transform(&cluster_t::centroid);
     //Update every centroid with its satellites mean
-    rn::transform(FWD(clusters) | rnv::filter(has_satellites),
+    rn::transform(FWD(out_clusters) | rnv::filter(has_satellites),
                   centroids.begin(),
                   mean, &cluster_t::satellites);
 }
 
-//k_means_impl: ARRAY overload
-template<std::size_t K, arithmetic PT_VALUE_T,
-         std::size_t D, std::size_t SZ>
-constexpr auto k_means_ovrl(std::array<DataPoint<PT_VALUE_T, D>, SZ> const& data_points, std::size_t n)
--> std::array<Cluster<PT_VALUE_T, D>, K>
+template<arithmetic PT_VALUE_T, std::size_t D>
+constexpr void k_means_impl(auto const& data_points, auto&& out_clusters,
+                            std::size_t k, std::size_t n)
 {
-    fmt::print("CALLING STD::ARRAY OVERLOAD\n\n");
-    if (SZ < K or K < 2) return {{}};
+    if (std::ranges::distance(data_points) < k or k < 2) return;
 
-    using cluster_t = Cluster<PT_VALUE_T, D>;
-    std::array<cluster_t, K> clusters;
-
-    auto centroids = init_centroids<PT_VALUE_T, D, K>(clusters, data_points);
+    auto&& k_out_clusters = FWD(out_clusters) | rnv::take(k);
+    auto centroids = init_centroids<PT_VALUE_T, D>(k_out_clusters, data_points);
         
     auto const is_not_centroid = [&centroids](auto const& pt)
     { return rn::find(centroids, static_cast<DataPoint<double, D>>(pt)) == centroids.end(); };
    
-    update_satellites<PT_VALUE_T, D>(clusters, data_points | rnv::filter(is_not_centroid));
+    update_satellites<PT_VALUE_T, D>(k_out_clusters, data_points | rnv::filter(is_not_centroid));
 
     while(n--){
-        update_centroids<PT_VALUE_T, D>(clusters);
-        update_satellites<PT_VALUE_T, D>(clusters, data_points | rnv::filter(is_not_centroid));
+        update_centroids<PT_VALUE_T, D>(k_out_clusters);
+        update_satellites<PT_VALUE_T, D>(k_out_clusters, data_points | rnv::filter(is_not_centroid));
     }
-    
-    return clusters;
 }
 
-//k_means_impl: RANGE overload
-template<std::size_t K, arithmetic PT_VALUE_T, std::size_t D>
-constexpr auto k_means_ovrl(auto const& data_points, std::size_t n)
-//TODO: Trailing return type
-{
-    fmt::print("CALLING RANGES OVERLOAD\n\n");
-    // if (std::ranges::distance(data_points) < K or K < 2) return {{}};
-    
-    //TODO: This shouldn't be a std::array but the data_points' decltype
-    std::array<Cluster<PT_VALUE_T, D>, K> clusters;
+namespace hlpr{
+    template<typename T>
+    struct is_data_point : std::false_type {};
+    template<typename T, std::size_t D>
+    struct is_data_point<DataPoint<T, D>> : std::true_type {};
+    template<typename R>
+    concept data_points_range = is_data_point<rn::range_value_t<R>>::value;
 
-    auto centroids = init_centroids<PT_VALUE_T, D, K>(clusters, data_points);
-        
-    auto const is_not_centroid = [&centroids/*, &D*/](auto const& pt)
-    { return rn::find(centroids, static_cast<DataPoint<double, D>>(pt)) == centroids.end(); };
-   
-    update_satellites<PT_VALUE_T, D>(clusters, data_points | rnv::filter(is_not_centroid));
-
-    while(n--){
-        update_centroids<PT_VALUE_T, D>(clusters);
-        update_satellites<PT_VALUE_T, D>(clusters, data_points | rnv::filter(is_not_centroid));
-    }
-    
-    return clusters;
+    template<typename T>
+    struct data_point_size;
+    template<typename T, std::size_t D>
+    struct data_point_size<DataPoint<T, D>> : std::integral_constant<std::size_t, D> {};
 }
 
-template<typename T>
-struct is_data_point : std::false_type {};
-template<typename T, std::size_t D>
-struct is_data_point<DataPoint<T, D>> : std::true_type {};
+//TODO: Should return an output iterator that compares equal to last
 template<typename R>
-concept data_points_range = is_data_point<std::ranges::range_value_t<R>>::value;
-
-template<typename T>
-struct data_point_size;
-template<typename T, std::size_t D>
-struct data_point_size<DataPoint<T, D>> : std::integral_constant<std::size_t, D> {};
-
-template<std::size_t K>
-constexpr auto k_means(data_points_range auto const& data_points, std::size_t n)
+constexpr void k_means(hlpr::data_points_range auto const& data_points,
+                       R&& out_range,
+                       std::size_t k,
+                       std::size_t n)
+    // requires(rn::output_range<R, rn::range_value_t<decltype(data_points)>>)
+//TODO: Write a minimized example that uses this requirement (ask why x5 it's necessary)
 {
     using data_point_t = rn::range_value_t<decltype(data_points)>;
     using point_value_t = data_point_t::value_type;
-    auto constexpr dimension = data_point_size<data_point_t>::value;
+    auto constexpr dimension = hlpr::data_point_size<data_point_t>::value;
 
-    return k_means_ovrl<K, point_value_t, dimension>(FWD(data_points), n);
+    k_means_impl<point_value_t, dimension>(FWD(data_points), FWD(out_range), k, n);
 }
 
 } // namespace kmn
@@ -328,7 +303,7 @@ int main(){
                                      DataPoint(34.0, 35.0, 36.0),
                                      DataPoint(37.0, 38.0, 39.0),
                                      DataPoint(40.0, 41.0, 42.0)};
-    auto const float_arr_df = array{DataPoint(1.0f, 2.0f, 3.0f),//TODO: Doesn't work with floats
+    auto const float_arr_df = array{DataPoint(1.0f, 2.0f, 3.0f),//BUG: Doesn't work with floats
                                     DataPoint(4.0f, 5.0f, 6.0f),
                                     DataPoint(7.0f, 8.0f, 9.0f),
                                     DataPoint(10.0f, 11.0f, 12.0f),
@@ -356,8 +331,15 @@ int main(){
                                    DataPoint(34, 35, 36),
                                    DataPoint(37, 38, 39),
                                    DataPoint(40, 41, 42)};                                    
-    print("OUTPUT clusters:\n\n");
-    print_clusters(k_means<4>(double_arr_df, 10));
+    //TODO: Isn't it intrusive to impose kmn::Cluster on the user?
+    std::array<kmn::Cluster<int, 3>, 6> clusters;
+    
+    auto constexpr k{ 4 };
+    auto constexpr n{ 10 };
+    k_means(int_arr_df, clusters, k, n);
 
+    print("OUTPUT clusters:\n\n");
+    print_clusters(clusters, k);
+    
     return 0;
 }
