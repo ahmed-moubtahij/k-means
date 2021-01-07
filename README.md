@@ -12,7 +12,7 @@ At the time of writing this, I'm an undergrad in Systems Engineering, and this i
 See https://godbolt.org/z/hxbrTz (code may not be up to date with the latest version).
 
 ```cpp
-using std::array, kmn::DataPoint;
+using fmt::print, std::array, kmn::DataPoint;
 using kmn::print_clusters, kmn::k_means;
 auto const df = array{DataPoint(1, 2, 3), DataPoint(4, 5, 6),
                       DataPoint(7, 8, 9), DataPoint(10, 11, 12),
@@ -21,8 +21,7 @@ auto const df = array{DataPoint(1, 2, 3), DataPoint(4, 5, 6),
                       DataPoint(25, 26, 27), DataPoint(28, 29, 30),
                       DataPoint(31, 32, 33), DataPoint(34, 35, 36),
                       DataPoint(37, 38, 39), DataPoint(40, 41, 42)};
-                      
-
+                     
 print("OUTPUT clusters:\n\n");
 print_clusters(k_means<4>(df, 100));
 ```
