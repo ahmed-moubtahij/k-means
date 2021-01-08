@@ -48,12 +48,13 @@ A `std::array<kmn::DataPoint<T, D>, SZ>` is currently the type expected of the i
 
 ## TODO
 - *andrewsutton@Reddit*: Refactor to a range type of data points parameter.
+- Filtering centroids out of data points is not necessary anymore as centroids aren't real points.
 - Refactor to an output range parameter instead of a returned function-local array.
 - Fix bug with an input range of `DataPoint<float, D>`.
 - Decide whether it's intrusive/avoidable to impose `kmn::Cluster` on the user.
 - *sarah@#includecpp*: Use `std::ranges::*` function objects e.g. `rn::begin(\*)` instead of` \*.begin()`.
 - *sarah@#includecpp*: `begin` and `end` instead of `cbegin` and `cend` in the context of ranges; views have shallow const semantics.
-- *marcorubini@#includecpp*: Wrap k_means as a fuction object to allow for lazy semantics and passing it around.
+- *marcorubini@#includecpp*: Wrap k_means as a function object to allow for lazy semantics and passing it around.
 - *Lesley Lai@#includecpp*: Explicitize generic lambdas; `auto` isn't type inference but a template parameter `T` in this context.
 - Lookup opportunities for `std::move`, in-place construction...etc.
 - *dicroce@Reddit*: Write `auto_k_means`; start with K=1, iteratively employ k-means with greater K's until adding a new centroid implies most of the satellites assigned to it came from an existing cluster.
