@@ -52,6 +52,7 @@ A `std::array<kmn::DataPoint<T, D>, SZ>` is currently the type expected of the i
 - Filtering centroids out of data points is not necessary anymore as centroids aren't real points.
 - Refactor to an output range parameter instead of a returned function-local array.
 - Fix bug with an input range of `DataPoint<float, D>`.
+- Decide on return type of `kmn::k_means`.
 - Decide whether it's intrusive/avoidable to impose `kmn::Cluster` on the user.
 - *sarah@#includecpp*: Use `std::ranges::*` function objects e.g. `rn::begin(\*)` instead of` \*.begin()`.
 - *sarah@#includecpp*: `begin` and `end` instead of `cbegin` and `cend` in the context of ranges; views have shallow const semantics.
