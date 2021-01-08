@@ -1,4 +1,5 @@
 ![alt text](https://i.imgur.com/RBXzdQ8.png)
+### Infographic made by [spiyer99](https://github.com/spiyer99)
 ## Requirements
 - **-std=c++2a**
 - **gcc 10**
