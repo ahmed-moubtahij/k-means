@@ -1,4 +1,4 @@
-![alt text](https://i.redd.it/g16w49p2hw661.png)
+![alt text](https://i.ibb.co/K2KhYx0/K-means-graphic.png)
 ## Requirements
 - **-std=c++2a**
 - **gcc 10**
