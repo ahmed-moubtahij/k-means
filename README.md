@@ -23,12 +23,15 @@ array{DataPoint(1, 2, 3),    DataPoint(4, 5, 6),    DataPoint(7, 8, 9),
       DataPoint(19, 20, 21), DataPoint(22, 23, 24), DataPoint(25, 26, 27),
       DataPoint(28, 29, 30), DataPoint(31, 32, 33), DataPoint(34, 35, 36),
       DataPoint(37, 38, 39), DataPoint(40, 41, 42), DataPoint(43, 44, 45)};
+
 //OUTPUT range
 std::array<kmn::Cluster<int, 3>, 6> clusters;
+
 //CALL
 auto const k{ 4 };
 auto const n{ 10 };
 k_means(int_arr_df, clusters, k, n);
+
 //DISPLAY
 print("OUTPUT clusters:\n\n");
 print_clusters(clusters, k);
