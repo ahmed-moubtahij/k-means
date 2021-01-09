@@ -9,9 +9,6 @@
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
-//TODO: marcorubini's function object wrapper implementation
-//TODO: When to std::move?
-
 using fmt::print;
 
 //dispatch: Akin to a std::partition_copy albeit with output to multiple ranges
@@ -247,8 +244,6 @@ constexpr void k_means_impl(auto const& data_points, auto&& out_clusters,
     auto&& k_out_clusters = FWD(out_clusters) | rnv::take(k);
     auto centroids = init_centroids<PT_VALUE_T, D>(k_out_clusters, data_points);
         
-    //TODO: It's now established that centroids aren't actual points,
-    //      this filter may not be necessary
     auto const is_not_centroid = [&centroids](DataPoint<PT_VALUE_T, D> const& pt)
     {
         using centroid_t = typename Cluster<PT_VALUE_T, D>::centroid_t;
@@ -292,8 +287,6 @@ rn::output_range< std::remove_reference_t< R >,
                   rn::range_value_t<std::remove_cvref_t< R >> >
 and hlpr::is_cluster< rn::range_value_t<std::remove_cvref_t< R >> >::value;
 
-//TODO: Should return an output iterator that compares equal to last
-//      Return type: k_means_result<>... like the stl does?
 constexpr void
 k_means(data_points_range auto const& data_points,
         clusters_out_range auto&& out_range, 
@@ -314,7 +307,6 @@ int main(){
     using std::array, std::vector, kmn::DataPoint;
     using kmn::print_clusters, kmn::k_means;
 
-    //TODO: These inputs should be the unit tests that run with every commit
     auto const int_arr_df =
     array{DataPoint(1, 2, 3), DataPoint(4, 5, 6), DataPoint(7, 8, 9),
           DataPoint(10, 11, 12), DataPoint(13, 14, 15), DataPoint(16, 17, 18),
@@ -343,7 +335,6 @@ int main(){
           DataPoint(28, 29, 30), DataPoint(31, 32, 33), DataPoint(34, 35, 36),
           DataPoint(37, 38, 39), DataPoint(40, 41, 42), DataPoint(43, 44, 45)};
 
-    //TODO: Isn't it intrusive to impose kmn::Cluster on the user?
     std::array<kmn::Cluster<int, 3>, 6> clusters;
     
     auto const k{ 4 };
