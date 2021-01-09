@@ -28,8 +28,7 @@ array{DataPoint(1, 2, 3),    DataPoint(4, 5, 6),    DataPoint(7, 8, 9),
 std::array<kmn::Cluster<int, 3>, 6> clusters;
 
 //CALL
-auto const k{ 4 };
-auto const n{ 10 };
+std::size_t const k{ 4 }, n{ 10 };
 k_means(int_arr_df, clusters, k, n);
 
 //DISPLAY
