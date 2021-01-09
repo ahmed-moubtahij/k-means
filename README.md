@@ -63,6 +63,7 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
 - Decide whether it's intrusive/avoidable to impose `kmn::Cluster` on the user.
 - *marcorubini@#includecpp*: Wrap k_means as a function object to allow for lazy semantics and passing it around.
 - Lookup opportunities for `std::move`, in-place construction...etc.
+- Provide an interface for file input.
 - *dicroce@Reddit*: Write `auto_k_means`; start with K=1, iteratively employ k-means with greater K's until adding a new centroid implies most of the satellites assigned to it came from an existing cluster.
 - Parallelizing.
 
