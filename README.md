@@ -57,7 +57,7 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
 
 ## TODO
 - Filtering centroids out of data points is not necessary anymore as centroids aren't real points.
-- Require that the clusters output range iterator models `std::forward_iterator` as it's being written to in multiple passes.
+- Require from clusters' output range iterator to model `std::forward_iterator` since it's being written to in multiple passes.
 - Write unit tests.
 - Decide on return type of `kmn::k_means`.
 - Decide whether it's intrusive/avoidable to impose `kmn::Cluster` on the user.
