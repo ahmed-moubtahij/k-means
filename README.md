@@ -18,7 +18,7 @@ using kmn::print_clusters, kmn::k_means;
 
 //INPUT range
 auto const int_arr_df =
-array{DataPoint(1, 2, 3), DataPoint(4, 5, 6), DataPoint(7, 8, 9),
+array{DataPoint(1, 2, 3),    DataPoint(4, 5, 6),    DataPoint(7, 8, 9),
       DataPoint(10, 11, 12), DataPoint(13, 14, 15), DataPoint(16, 17, 18),
       DataPoint(19, 20, 21), DataPoint(22, 23, 24), DataPoint(25, 26, 27),
       DataPoint(28, 29, 30), DataPoint(31, 32, 33), DataPoint(34, 35, 36),
