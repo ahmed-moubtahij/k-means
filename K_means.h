@@ -291,6 +291,8 @@ constexpr void
 k_means(data_points_range auto const& data_points,
         clusters_out_range auto&& out_range, 
         std::size_t k, std::size_t n)
+    //Ensure that the output clusters' data point types are the same (in value type and size)
+    //as the input range's data point types
     requires (std::is_same_v<rn::range_value_t<decltype(data_points)>,
                              typename rn::range_value_t<decltype(out_range)>::data_point_t>)
 {
