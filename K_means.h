@@ -9,6 +9,9 @@
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
+//TODO: marcorubini's function object wrapper implementation
+//TODO: When to std::move?
+
 using fmt::print;
 
 //dispatch: Akin to a std::partition_copy albeit with output to multiple ranges
@@ -35,9 +38,9 @@ namespace kmn{
 namespace rn = std::ranges;
 namespace rnv = rn::views;
 
-void print_clusters(auto const& clusters)
+void print_clusters(auto const& clusters, std::size_t k)
 {
-    for(auto const& [centroid, satellites]: clusters){
+    for(auto const& [centroid, satellites]: clusters | rnv::take(k)){
         print("centroid: {}\nsatellites: {}\n\n",
                centroid, satellites);
     }
@@ -54,6 +57,7 @@ struct DataPoint final : private std::array<T, D> {
     using std::array<T, D>::cbegin;
     using std::array<T, D>::cend;
     using std::array<T, D>::operator[];
+    using std::array<T, D>::size;
 
     constexpr DataPoint() noexcept = default;
     constexpr DataPoint(DataPoint const&) noexcept = default;
@@ -71,21 +75,33 @@ struct DataPoint final : private std::array<T, D> {
         return res;
     }
 
+    //operator/ overload for floating point value type; result's value type matches it
+    constexpr auto operator/(arithmetic auto n) const
+        requires (std::floating_point<value_type>)
+    {
+        DataPoint<value_type, D> res;
+        rn::transform(*this, res.begin(),
+        [&n](value_type e){ return e / static_cast<value_type>(n); });
+        return res;
+    }
+
+    //operator/ overload for integer T => result's value type = double
     constexpr auto operator/(arithmetic auto n) const
     {
         DataPoint<double, D> res;
         rn::transform(*this, res.begin(),
-                      [&n](auto const& e)
-                      { return e / static_cast<double>(n); });
+        [&n](value_type e){ return e / static_cast<double>(n); });
+                      
         return res;
     }
 
-    constexpr explicit operator DataPoint<double, D>() const
+    template<std::floating_point U>
+    constexpr explicit operator DataPoint<U, D>() const
     {
         DataPoint<double, D> res;
         rn::transform(*this, res.begin(),
-                      [](auto const& num)
-                      { return static_cast<double>(num); });
+        [](value_type num){ return static_cast<U>(num); });
+                      
         return res;
     }
 };
@@ -93,27 +109,43 @@ struct DataPoint final : private std::array<T, D> {
 template<arithmetic T, typename... Us>
 DataPoint(T, Us...) -> DataPoint<T, sizeof...(Us) + 1>;
 
+namespace hlpr{
+    template<typename T, std::size_t D>
+    struct select_centroid
+    {
+        //A DataPoint's value type T is constrained to be arithmetic
+        //So T here is an integral if the floating_point overload is discarded
+        using type = DataPoint<double, D>;
+    };
+
+    template<std::floating_point T, std::size_t D>
+    struct select_centroid<T, D>
+    {
+        using type = DataPoint<T, D>;
+    };
+
+    template<typename T, std::size_t D>
+    using select_centroid_t = typename select_centroid<T, D>::type;
+}
 //Aggregate template Cluster
 template<typename T, std::size_t D>
 struct Cluster{
-    using centroid_t = DataPoint<double, D>;
-    using satellites_t = std::vector<DataPoint<T, D>>; 
-    
+    using data_point_t = DataPoint<T, D>;
+    using centroid_t = hlpr::select_centroid_t<T, D>; 
+    using satellites_t = std::vector<data_point_t>; 
     centroid_t centroid;    
     satellites_t satellites;
 };
 
-//sqr_dist: computes square distance between two data points
-template<typename T1, std::size_t D, typename T2>
+//sqr_dist: computes euclidean square distance between two data points
+template<typename T1, typename T2, std::size_t D>
 auto sqr_distance(DataPoint<T1,D> const& dp1,
                   DataPoint<T2,D> const& dp2)
 {
-    return
-    std::transform_reduce(dp1.cbegin(), dp1.cend(),
-                          dp2.cbegin(), 0,
-                          [](auto a, auto b){ return a + b; },
-                          [](auto a, auto b){ return (a - b) * (a - b); }
-                         );
+    return std::transform_reduce(
+           dp1.cbegin(), dp1.cend(), dp2.cbegin(), 0,
+           [](T1 a, T2 b){ return a + b; },
+           [](T1 a, T2 b){ return (a - b)*(a - b); });
 };
 //distance_from: Function Object Comparator
 //               of distances from two points to a reference point
@@ -124,7 +156,7 @@ struct distance_from{
     
     distance_from() = delete;
     distance_from& operator=(distance_from const&) = delete;
-    constexpr distance_from(ref_point_t const& pt) : m_pt{ pt } {}
+    constexpr distance_from(ref_point_t const& pt) : m_pt{pt} {}
     
     template<typename U>
     constexpr bool operator()(DataPoint<U, D> const& c1,
@@ -138,22 +170,25 @@ struct distance_from{
     }
 };
 
-template<typename T, std::size_t D, std::size_t K>
-auto init_centroids(auto&& clusters, auto const& data)
+template<typename T, std::size_t D>
+auto init_centroids(auto&& out_clusters, auto const& data_points)
 {
     using cluster_t = Cluster<T, D>;    
-    auto centroids = FWD(clusters) | rnv::transform(&cluster_t::centroid);
-    //Initialize centroids with a sample of K points from data
+    auto centroids = FWD(out_clusters) | rnv::transform(&cluster_t::centroid);
+    auto const k = rn::distance(out_clusters);
+    //Initialize centroids with a sample of K points from data_points
     if constexpr(std::floating_point<T>){
-        rn::sample(data, centroids.begin(),
-                   K, std::mt19937{std::random_device{}()});
-    } else { //data is a range of DataPoints of integral value types T
-        //centroids get updated with data points' means so they are floating point types
-        rn::sample(data |
-                   rnv::transform([](auto const& pt)
-                   { return static_cast<DataPoint<double, D>>(pt); }),
-                   centroids.begin(),
-                   K, std::mt19937{std::random_device{}()});
+        rn::sample(data_points, centroids.begin(),
+                   k, std::mt19937{std::random_device{}()});
+    } else { //else, data_points is a range of DataPoints of integral value types T
+        //T needs to be a floating point type to match centroids' T
+        //because centroids get updated with data_points' means
+        //and a mean's result being intrinsically a floating point type
+        rn::sample(data_points | rnv::transform(
+                                [](DataPoint<T, D> const& pt)
+                                { return static_cast<DataPoint<double, D>>(pt); }),
+                   rn::begin(centroids),
+                   k, std::mt19937{std::random_device{}()});
     }
     return centroids;
 }
@@ -165,7 +200,8 @@ void update_satellites(auto&& clusters,
     using cluster_t = Cluster<T, D>;
     
     rn::for_each(clusters,
-                 [](auto&& satellites){ FWD(satellites).clear(); },
+                //explicitizing auto here to cluster_t::satellites_t doesn't compile on gcc 10.2                
+                 [](auto&& sats){ FWD(sats).clear(); },
                  &cluster_t::satellites);
     
     auto constexpr find_closest_centroid =
@@ -173,7 +209,7 @@ void update_satellites(auto&& clusters,
     { return rn::min_element(FWD(clusters), comp, proj); };
 
     auto constexpr comp_dist_to_centroid =
-    [](auto const& data_pt){ return distance_from{ data_pt }; };
+    [](DataPoint<T, D> const& pt){ return distance_from{ pt }; };
 
     //Dispatch every data point to the cluster whose centroid is closest
     dispatch(FWD(non_centroid_data),
@@ -184,75 +220,138 @@ void update_satellites(auto&& clusters,
 }
 
 template<typename T, std::size_t D>
-void update_centroids(auto&& clusters)
+void update_centroids(auto&& out_clusters)
 {
     using cluster_t = Cluster<T, D>;
     
-    auto constexpr mean = [](auto const& r)
-    { return std::reduce(r.cbegin(), r.cend()) / r.size(); };
+    auto constexpr mean =
+    [](cluster_t::satellites_t const& sats)
+    { return std::reduce(std::cbegin(sats), std::cend(sats)) / std::size(sats); };
     
-    auto constexpr has_satellites = [](auto const& cluster)
+    auto constexpr has_satellites = [](cluster_t const& cluster)
     { return not cluster.satellites.empty(); };
     
-    auto&& centroids = FWD(clusters) | rnv::transform(&cluster_t::centroid);
+    auto&& centroids = FWD(out_clusters) | rnv::transform(&cluster_t::centroid);
     //Update every centroid with its satellites mean
-    rn::transform(FWD(clusters) | rnv::filter(has_satellites),
-                  centroids.begin(),
+    rn::transform(FWD(out_clusters) | rnv::filter(has_satellites),
+                  rn::begin(centroids),
                   mean, &cluster_t::satellites);
 }
 
-template<std::size_t K, std::size_t SZ,
-         arithmetic T, std::size_t D>
-constexpr auto
-k_means(std::array<DataPoint<T, D>, SZ> const& data, std::size_t n)
--> std::array<Cluster<T, D>, K>
+template<arithmetic PT_VALUE_T, std::size_t D>
+constexpr void k_means_impl(auto const& data_points, auto&& out_clusters,
+                            std::size_t k, std::size_t n)
 {
-    if (SZ < K or K < 2) return {{}};
+    if (rn::distance(data_points) < k or k < 2) return;
 
-    using cluster_t = Cluster<T, D>;
-    std::array<cluster_t, K> clusters;
-    //A given cluster will have at most SZ satellites
-    rn::for_each(clusters,
-                 [](auto&& satellites){FWD(satellites).reserve(SZ); },
-                 &cluster_t::satellites);
-
-    auto centroids = init_centroids<T, D, K>(clusters, data);
+    auto&& k_out_clusters = FWD(out_clusters) | rnv::take(k);
+    auto centroids = init_centroids<PT_VALUE_T, D>(k_out_clusters, data_points);
         
-    auto const is_not_centroid = [&centroids](auto const& pt)
-    { return rn::find(centroids, static_cast<DataPoint<double, D>>(pt)) == centroids.end(); };
-   
-    update_satellites<T, D>(clusters, data | rnv::filter(is_not_centroid));
-
-    while(n--){
-        update_centroids<T, D>(clusters);
-        update_satellites<T, D>(clusters, data | rnv::filter(is_not_centroid));
-    }
+    //TODO: It's now established that centroids aren't actual points,
+    //      this filter may not be necessary
+    auto const is_not_centroid = [&centroids](DataPoint<PT_VALUE_T, D> const& pt)
+    {
+        using centroid_t = typename Cluster<PT_VALUE_T, D>::centroid_t;
+        return rn::find(centroids, static_cast<centroid_t>(pt)) == centroids.end();
+    };
     
-    return clusters;
+    
+    update_satellites<PT_VALUE_T, D>(k_out_clusters,
+                                     data_points | rnv::filter(is_not_centroid));
+
+    while(n--)
+    {
+        update_centroids<PT_VALUE_T, D>(k_out_clusters);
+        update_satellites<PT_VALUE_T, D>(k_out_clusters,
+                                         data_points | rnv::filter(is_not_centroid));
+    }
+}
+
+namespace hlpr{
+    template<typename T>
+    struct is_data_point : std::false_type {};
+    template<typename T, std::size_t D>
+    struct is_data_point<DataPoint<T, D>> : std::true_type {};
+    
+    template<typename T>
+    struct data_point_size;
+    template<typename T, std::size_t D>
+    struct data_point_size<DataPoint<T, D>> : std::integral_constant<std::size_t, D> {};
+
+    template<typename T>
+    struct is_cluster : std::false_type {};
+    template<typename T, std::size_t D>
+    struct is_cluster<Cluster<T, D>> : std::true_type{};
+}
+template<typename R>
+concept data_points_range = hlpr::is_data_point<rn::range_value_t<R>>::value;
+
+template<typename R>
+concept clusters_out_range =
+rn::output_range< std::remove_reference_t< R >,
+                  rn::range_value_t<std::remove_cvref_t< R >> >
+and hlpr::is_cluster< rn::range_value_t<std::remove_cvref_t< R >> >::value;
+
+//TODO: Should return an output iterator that compares equal to last
+//      Return type: k_means_result<>... like the stl does?
+constexpr void
+k_means(data_points_range auto const& data_points,
+        clusters_out_range auto&& out_range, 
+        std::size_t k, std::size_t n)
+    requires (std::is_same_v<rn::range_value_t<decltype(data_points)>,
+                             typename rn::range_value_t<decltype(out_range)>::data_point_t>)
+{
+    using data_point_t = rn::range_value_t<decltype(data_points)>;
+    using point_value_t = data_point_t::value_type;
+    auto constexpr dimension = hlpr::data_point_size<data_point_t>::value;
+
+    k_means_impl<point_value_t, dimension>(FWD(data_points), FWD(out_range), k, n);
 }
 
 } // namespace kmn
 
 int main(){
-    using std::array, kmn::DataPoint;
+    using std::array, std::vector, kmn::DataPoint;
     using kmn::print_clusters, kmn::k_means;
 
-    auto const integral_df = array{DataPoint(1, 2, 3),
-                                   DataPoint(4, 5, 6),
-                                   DataPoint(7, 8, 9),
-                                   DataPoint(10, 11, 12),
-                                   DataPoint(13, 14, 15),
-                                   DataPoint(16, 17, 18),
-                                   DataPoint(19, 20, 21),
-                                   DataPoint(22, 23, 24),
-                                   DataPoint(25, 26, 27),
-                                   DataPoint(28, 29, 30),
-                                   DataPoint(31, 32, 33),
-                                   DataPoint(34, 35, 36),
-                                   DataPoint(37, 38, 39),
-                                   DataPoint(40, 41, 42)};
+    //TODO: These inputs should be the unit tests that run with every commit
+    auto const int_arr_df =
+    array{DataPoint(1, 2, 3), DataPoint(4, 5, 6), DataPoint(7, 8, 9),
+          DataPoint(10, 11, 12), DataPoint(13, 14, 15), DataPoint(16, 17, 18),
+          DataPoint(19, 20, 21), DataPoint(22, 23, 24), DataPoint(25, 26, 27),
+          DataPoint(28, 29, 30), DataPoint(31, 32, 33), DataPoint(34, 35, 36),
+          DataPoint(37, 38, 39), DataPoint(40, 41, 42), DataPoint(43, 44, 45)};
+    
+    auto const double_arr_df =
+    array{DataPoint(1., 2., 3.),    DataPoint(4., 5., 6.),    DataPoint(7., 8., 9.),
+          DataPoint(10., 11., 12.), DataPoint(13., 14., 15.), DataPoint(16., 17., 18.),
+          DataPoint(19., 20., 21.), DataPoint(22., 23., 24.), DataPoint(25., 26., 27.),
+          DataPoint(28., 29., 30.), DataPoint(31., 32., 33.), DataPoint(34., 35., 36.),
+          DataPoint(37., 38., 39.), DataPoint(40., 41., 42.), DataPoint(43., 44., 45.)};
+
+    auto const float_arr_df = //BUG: Doesn't work with floats
+    array{DataPoint(1.f, 2.f, 3.f),    DataPoint(4.f, 5.f, 6.f),    DataPoint(7.f, 8.f, 9.f),
+          DataPoint(10.f, 11.f, 12.f), DataPoint(13.f, 14.f, 15.f), DataPoint(16.f, 17.f, 18.f),
+          DataPoint(19.f, 20.f, 21.f), DataPoint(22.f, 23.f, 24.f), DataPoint(25.f, 26.f, 27.f),
+          DataPoint(28.f, 29.f, 30.f), DataPoint(31.f, 32.f, 33.f), DataPoint(34.f, 35.f, 36.f),
+          DataPoint(37.f, 38.f, 39.f), DataPoint(40.f, 41.f, 42.f), DataPoint(43.f, 44.f, 45.f)};
+
+    auto const int_vec_df =
+    vector{DataPoint(1, 2, 3),   DataPoint(4, 5, 6),    DataPoint(7, 8, 9),
+          DataPoint(10, 11, 12), DataPoint(13, 14, 15), DataPoint(16, 17, 18),
+          DataPoint(19, 20, 21), DataPoint(22, 23, 24), DataPoint(25, 26, 27),
+          DataPoint(28, 29, 30), DataPoint(31, 32, 33), DataPoint(34, 35, 36),
+          DataPoint(37, 38, 39), DataPoint(40, 41, 42), DataPoint(43, 44, 45)};
+
+    //TODO: Isn't it intrusive to impose kmn::Cluster on the user?
+    std::array<kmn::Cluster<int, 3>, 6> clusters;
+    
+    auto const k{ 4 };
+    auto const n{ 10 };
+    k_means(int_arr_df, clusters, k, n);
+
     print("OUTPUT clusters:\n\n");
-    print_clusters(k_means<4>(integral_df, 100));
+    print_clusters(clusters, k);
 
     return 0;
 }
