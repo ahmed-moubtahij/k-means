@@ -220,7 +220,8 @@ void update_centroids(auto&& out_clusters)
     [](cluster_t::satellites_t const& sats)
     { return std::reduce(std::cbegin(sats), std::cend(sats)) / std::size(sats); };
     
-    auto constexpr has_satellites = [](cluster_t const& cluster)
+    auto constexpr has_satellites =
+    [](cluster_t const& cluster)
     { return not cluster.satellites.empty(); };
     
     auto&& centroids = FWD(out_clusters) | rnv::transform(&cluster_t::centroid);
