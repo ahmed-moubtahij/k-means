@@ -66,7 +66,7 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
         - No imposing of an intrusive custom type (Cluster) for the output range on the user
         - Facilitates unit testing on the output range
 - Write unit tests.
-    - A given input X will have N reference outputs which the actual output has to compare against (their mean or any of them) within a tolerance.
+    - A given input (with fixed `n` and `k`) will have N reference outputs which the output of a given revision of the implementation has to compare against (i.e. references' mean or any one of them) within a tolerance.
         - The comparison would be done by euclidean distance between output ranges of indices.
     - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
 - Lookup opportunities for `std::move`, in-place construction...etc.
