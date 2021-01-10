@@ -109,17 +109,13 @@ DataPoint(T, Us...) -> DataPoint<T, sizeof...(Us) + 1>;
 namespace hlpr{
     template<typename T, std::size_t D>
     struct select_centroid
-    {
-        //A DataPoint's value type T is constrained to be arithmetic
-        //So T here is an integral if the floating_point overload is discarded
-        using type = DataPoint<double, D>;
-    };
+    //A DataPoint's value type T is constrained to be arithmetic
+    //So T here is an integral if the floating_point overload is discarded
+    { using type = DataPoint<double, D>; };
 
     template<std::floating_point T, std::size_t D>
     struct select_centroid<T, D>
-    {
-        using type = DataPoint<T, D>;
-    };
+    { using type = DataPoint<T, D>; };
 
     template<typename T, std::size_t D>
     using select_centroid_t = typename select_centroid<T, D>::type;
@@ -132,8 +128,6 @@ struct Cluster{
     using satellites_t = std::vector<data_point_t>; 
     centroid_t centroid;    
     satellites_t satellites;
-
-    friend constexpr bool operator<=>(Cluster const&, Cluster const&) = default;
 };
 
 //sqr_dist: computes euclidean square distance between two data points
@@ -271,7 +265,6 @@ namespace hlpr{
     template<typename T, std::size_t D>
     struct is_cluster<Cluster<T, D>> : std::true_type{};
 }
-         
 template<typename R>
 concept data_points_range = hlpr::is_data_point<rn::range_value_t<R>>::value;
 
