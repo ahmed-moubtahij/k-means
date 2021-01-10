@@ -271,11 +271,9 @@ template<typename R>
 concept data_points_range = hlpr::is_data_point<rn::range_value_t<R>>::value;
 
 template<typename R>
-concept clusters_out_range =
-rn::output_range< std::remove_reference_t< R >,
-                  rn::range_value_t<std::remove_cvref_t< R >> >
-and hlpr::is_cluster< rn::range_value_t<std::remove_cvref_t< R >> >::value;
-
+concept clusters_out_range = rn::output_range< R, rn::range_value_t< R > >
+and rn::forward_range< R >
+and hlpr::is_cluster< rn::range_value_t< R > >::value;
          
 constexpr void
 k_means(data_points_range auto const& data_points,
