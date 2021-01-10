@@ -235,8 +235,6 @@ template<arithmetic PT_VALUE_T, std::size_t D>
 constexpr void k_means_impl(auto const& data_points, auto&& out_clusters,
                             std::size_t k, std::size_t n)
 {
-    if (rn::distance(data_points) < k or k < 2) return;
-
     auto&& k_out_clusters = FWD(out_clusters) | rnv::take(k);
     
     init_centroids<PT_VALUE_T, D>(k_out_clusters, data_points);
@@ -283,7 +281,9 @@ struct k_means_fun_obj{
         //(in value type and size) as the input range's data point types
         requires (std::is_same_v<rn::range_value_t<decltype(data_points)>,
                                 typename rn::range_value_t<decltype(out_range)>::data_point_t>)
-    {
+    {     
+        if (rn::distance(data_points) < k or k < 2) return;
+             
         using data_point_t = rn::range_value_t<decltype(data_points)>;
         using point_value_t = data_point_t::value_type;
         auto constexpr dimension = hlpr::data_point_size<data_point_t>::value;
