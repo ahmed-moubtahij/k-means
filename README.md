@@ -55,7 +55,6 @@ A call to `k_means(data_points_range, out_clusters_range, k, n);` writes `K` clu
 A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an arithmetic type and `D` the point's dimensionality. `T` and `D` can be implicit through CTAD as shown in the above example. All data points must naturally have the same dimensionality.
 
 ## TODO
-- Require from clusters' output range iterator to model `std::forward_iterator` since it's being written to in multiple passes.
 - Write unit tests.
 - Decide on return type of `kmn::k_means`.
 - Decide whether it's intrusive/avoidable to impose `kmn::Cluster` on the user.
