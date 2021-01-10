@@ -10,7 +10,7 @@
 At the time of writing this, I'm an undergrad in Systems Engineering, and this is intended as a practice project that ideally evolves into something useful.
 
 ## Demo
-See https://godbolt.org/z/4z9bs1 (code may not be up to date with the latest version).
+See https://godbolt.org/z/qaK8Ye (code may not be up to date with the latest version).
 
 ```cpp
 using fmt::print, std::array, kmn::DataPoint;
@@ -56,9 +56,11 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
 
 ## TODO
 - Write unit tests.
-- Decide on return type of `kmn::k_means`.
-- Decide whether it's intrusive/avoidable to impose `kmn::Cluster` on the user.
-- *marcorubini@#includecpp*: Wrap k_means as a function object to allow for lazy semantics and passing it around.
+    - A given input X will have N reference outputs which the actual output has to compare against (their mean or any of them) within a tolerance.
+    - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
+- *sarah@#includecpp*: Output range of indices mapping each point to its cluster + return object `{vector of centroids, sbo_vector of cluster sizes, reference to input range, reference to output range}`
+    - Allocation of a clusters range is offloaded as an opt-in to the user, as permitted by the returned information
+    - No imposing of an intrusive custom type (Cluster) for the output range on the user
 - Lookup opportunities for `std::move`, in-place construction...etc.
 - Provide an interface for file input.
 - *dicroce@Reddit*: Write `auto_k_means`; start with K=1, iteratively employ k-means with greater K's until adding a new centroid implies most of the satellites assigned to it came from an existing cluster.
