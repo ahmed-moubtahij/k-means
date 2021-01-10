@@ -178,8 +178,8 @@ void init_centroids(auto&& out_clusters, auto const& data_points)
         //because centroids get updated with data_points' means
         //and a mean's result being intrinsically a floating point type
         rn::sample(data_points | rnv::transform(
-                                [](DataPoint<T, D> const& pt)
-                                { return static_cast<DataPoint<double, D>>(pt); }),
+                                 [](DataPoint<T, D> const& pt)
+                                 { return static_cast<DataPoint<double, D>>(pt); }),
                    rn::begin(centroids), k,
                    std::mt19937{std::random_device{}()});
     }
