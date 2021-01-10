@@ -9,8 +9,6 @@
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
-using fmt::print;
-
 //dispatch: Akin to a std::partition_copy albeit with output to multiple ranges
 //src_range should be const& but ranges::views don't support const begin/end
 template<std::ranges::input_range R1,
@@ -168,14 +166,14 @@ struct distance_from{
 };
 
 template<typename T, std::size_t D>
-auto init_centroids(auto&& out_clusters, auto const& data_points)
+void init_centroids(auto&& out_clusters, auto const& data_points)
 {
     using cluster_t = Cluster<T, D>;    
     auto centroids = FWD(out_clusters) | rnv::transform(&cluster_t::centroid);
     auto const k = rn::distance(out_clusters);
     //Initialize centroids with a sample of K points from data_points
     if constexpr(std::floating_point<T>){
-        rn::sample(data_points, centroids.begin(),
+        rn::sample(data_points, rn::begin(centroids),
                    k, std::mt19937{std::random_device{}()});
     } else { //else, data_points is a range of DataPoints of integral value types T
         //T needs to be a floating point type to match centroids' T
@@ -184,10 +182,9 @@ auto init_centroids(auto&& out_clusters, auto const& data_points)
         rn::sample(data_points | rnv::transform(
                                 [](DataPoint<T, D> const& pt)
                                 { return static_cast<DataPoint<double, D>>(pt); }),
-                   rn::begin(centroids),
-                   k, std::mt19937{std::random_device{}()});
+                   rn::begin(centroids), k,
+                   std::mt19937{std::random_device{}()});
     }
-    return centroids;
 }
 
 template<typename T, std::size_t D>
@@ -242,23 +239,15 @@ constexpr void k_means_impl(auto const& data_points, auto&& out_clusters,
     if (rn::distance(data_points) < k or k < 2) return;
 
     auto&& k_out_clusters = FWD(out_clusters) | rnv::take(k);
-    auto centroids = init_centroids<PT_VALUE_T, D>(k_out_clusters, data_points);
+    
+    init_centroids<PT_VALUE_T, D>(k_out_clusters, data_points);
         
-    auto const is_not_centroid = [&centroids](DataPoint<PT_VALUE_T, D> const& pt)
-    {
-        using centroid_t = typename Cluster<PT_VALUE_T, D>::centroid_t;
-        return rn::find(centroids, static_cast<centroid_t>(pt)) == centroids.end();
-    };
-    
-    
-    update_satellites<PT_VALUE_T, D>(k_out_clusters,
-                                     data_points | rnv::filter(is_not_centroid));
+    update_satellites<PT_VALUE_T, D>(k_out_clusters, data_points);
 
     while(n--)
     {
         update_centroids<PT_VALUE_T, D>(k_out_clusters);
-        update_satellites<PT_VALUE_T, D>(k_out_clusters,
-                                         data_points | rnv::filter(is_not_centroid));
+        update_satellites<PT_VALUE_T, D>(k_out_clusters, data_points);
     }
 }
 
@@ -287,6 +276,7 @@ rn::output_range< std::remove_reference_t< R >,
                   rn::range_value_t<std::remove_cvref_t< R >> >
 and hlpr::is_cluster< rn::range_value_t<std::remove_cvref_t< R >> >::value;
 
+         
 constexpr void
 k_means(data_points_range auto const& data_points,
         clusters_out_range auto&& out_range, 
@@ -308,7 +298,8 @@ k_means(data_points_range auto const& data_points,
 int main(){
     using std::array, std::vector, kmn::DataPoint;
     using kmn::print_clusters, kmn::k_means;
-
+    
+    //INPUT ranges
     auto const int_arr_df =
     array{DataPoint(1, 2, 3), DataPoint(4, 5, 6), DataPoint(7, 8, 9),
           DataPoint(10, 11, 12), DataPoint(13, 14, 15), DataPoint(16, 17, 18),
@@ -323,7 +314,7 @@ int main(){
           DataPoint(28., 29., 30.), DataPoint(31., 32., 33.), DataPoint(34., 35., 36.),
           DataPoint(37., 38., 39.), DataPoint(40., 41., 42.), DataPoint(43., 44., 45.)};
 
-    auto const float_arr_df = //BUG: Doesn't work with floats
+    auto const float_arr_df =
     array{DataPoint(1.f, 2.f, 3.f),    DataPoint(4.f, 5.f, 6.f),    DataPoint(7.f, 8.f, 9.f),
           DataPoint(10.f, 11.f, 12.f), DataPoint(13.f, 14.f, 15.f), DataPoint(16.f, 17.f, 18.f),
           DataPoint(19.f, 20.f, 21.f), DataPoint(22.f, 23.f, 24.f), DataPoint(25.f, 26.f, 27.f),
@@ -336,13 +327,15 @@ int main(){
           DataPoint(19, 20, 21), DataPoint(22, 23, 24), DataPoint(25, 26, 27),
           DataPoint(28, 29, 30), DataPoint(31, 32, 33), DataPoint(34, 35, 36),
           DataPoint(37, 38, 39), DataPoint(40, 41, 42), DataPoint(43, 44, 45)};
-
+              
+    //OUTPUT range
     std::array<kmn::Cluster<int, 3>, 6> clusters;
     
-    auto const k{ 4 };
-    auto const n{ 10 };
+    //CALL
+    std::size_t const k{ 4 }, n{ 10 };
     k_means(int_arr_df, clusters, k, n);
-
+    
+    //DISPLAY
     print("OUTPUT clusters:\n\n");
     print_clusters(clusters, k);
 
