@@ -9,6 +9,8 @@
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
+using fmt::print;
+
 //dispatch: Akin to a std::partition_copy albeit with output to multiple ranges
 //src_range should be const& but ranges::views don't support const begin/end
 template<std::ranges::input_range R1,
@@ -130,6 +132,8 @@ struct Cluster{
     using satellites_t = std::vector<data_point_t>; 
     centroid_t centroid;    
     satellites_t satellites;
+
+    friend constexpr bool operator<=>(Cluster const&, Cluster const&) = default;
 };
 
 //sqr_dist: computes euclidean square distance between two data points
@@ -267,6 +271,7 @@ namespace hlpr{
     template<typename T, std::size_t D>
     struct is_cluster<Cluster<T, D>> : std::true_type{};
 }
+         
 template<typename R>
 concept data_points_range = hlpr::is_data_point<rn::range_value_t<R>>::value;
 
@@ -274,29 +279,35 @@ template<typename R>
 concept clusters_out_range = rn::output_range< R, rn::range_value_t< R > >
 and rn::forward_range< R >
 and hlpr::is_cluster< rn::range_value_t< R > >::value;
-         
-constexpr void
-k_means(data_points_range auto const& data_points,
-        clusters_out_range auto&& out_range, 
-        std::size_t k, std::size_t n)
-    //Ensure that the output clusters' data point types are the same (in value type and size)
-    //as the input range's data point types
-    requires (std::is_same_v<rn::range_value_t<decltype(data_points)>,
-                             typename rn::range_value_t<decltype(out_range)>::data_point_t>)
-{
-    using data_point_t = rn::range_value_t<decltype(data_points)>;
-    using point_value_t = data_point_t::value_type;
-    auto constexpr dimension = hlpr::data_point_size<data_point_t>::value;
 
-    k_means_impl<point_value_t, dimension>(FWD(data_points), FWD(out_range), k, n);
-}
+struct k_means_fun_obj{
+    constexpr void operator()
+    (data_points_range auto const& data_points,
+     clusters_out_range auto&& out_range, 
+     std::size_t k, std::size_t n) const
+        //Ensure that the output clusters' data point types are the same
+        //(in value type and size) as the input range's data point types
+        requires (std::is_same_v<rn::range_value_t<decltype(data_points)>,
+                                typename rn::range_value_t<decltype(out_range)>::data_point_t>)
+    {
+        using data_point_t = rn::range_value_t<decltype(data_points)>;
+        using point_value_t = data_point_t::value_type;
+        auto constexpr dimension = hlpr::data_point_size<data_point_t>::value;
+
+        k_means_impl<point_value_t, dimension>(FWD(data_points), FWD(out_range), k, n);
+    }
+};
+
+//Callable object that the user can call or pass around
+constexpr inline kmn::k_means_fun_obj k_means{};
 
 } // namespace kmn
+
 
 int main(){
     using std::array, std::vector, kmn::DataPoint;
     using kmn::print_clusters, kmn::k_means;
-    
+
     //INPUT ranges
     auto const int_arr_df =
     array{DataPoint(1, 2, 3), DataPoint(4, 5, 6), DataPoint(7, 8, 9),
@@ -325,7 +336,8 @@ int main(){
           DataPoint(19, 20, 21), DataPoint(22, 23, 24), DataPoint(25, 26, 27),
           DataPoint(28, 29, 30), DataPoint(31, 32, 33), DataPoint(34, 35, 36),
           DataPoint(37, 38, 39), DataPoint(40, 41, 42), DataPoint(43, 44, 45)};
-              
+
+
     //OUTPUT range
     std::array<kmn::Cluster<int, 3>, 6> clusters;
     
