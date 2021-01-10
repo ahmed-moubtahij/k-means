@@ -55,6 +55,7 @@ A call to `k_means(data_points_range, out_clusters_range, k, n);` writes `K` clu
 A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an arithmetic type and `D` the point's dimensionality. `T` and `D` can be implicit through CTAD as shown in the above example. All data points must naturally have the same dimensionality.
 
 ## TODO
+- Decide if the checks for pt==centroid in `distance_from` are still necessary.
 - *sarah@#includecpp*: Output range of indices mapping each point to its cluster.
     - take an input range of data points, and an output range of indices
     - create a vector of k means, and a vector of sizes of each cluster
