@@ -55,9 +55,6 @@ A call to `k_means(data_points_range, out_clusters_range, k, n);` writes `K` clu
 A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an arithmetic type and `D` the point's dimensionality. `T` and `D` can be implicit through CTAD as shown in the above example. All data points must naturally have the same dimensionality.
 
 ## TODO
-- Write unit tests.
-    - A given input X will have N reference outputs which the actual output has to compare against (their mean or any of them) within a tolerance.
-    - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
 - *sarah@#includecpp*: Output range of indices mapping each point to its cluster.
     - take an input range of data points, and an output range of indices
     - create a vector of k means, and a vector of sizes of each cluster
@@ -67,6 +64,11 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
     - What's gained:
         - Allocation of a clusters range is offloaded as an opt-in to the user, as permitted by the returned information
         - No imposing of an intrusive custom type (Cluster) for the output range on the user
+        - Facilitates unit testing on the output range
+- Write unit tests.
+    - A given input X will have N reference outputs which the actual output has to compare against (their mean or any of them) within a tolerance.
+        - The comparison would be done by euclidean distance between output ranges of indices.
+    - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
 - Lookup opportunities for `std::move`, in-place construction...etc.
 - Provide an interface for file input.
 - *dicroce@Reddit*: Write `auto_k_means`; start with K=1, iteratively employ k-means with greater K's until adding a new centroid implies most of the satellites assigned to it came from an existing cluster.
