@@ -58,9 +58,15 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
 - Write unit tests.
     - A given input X will have N reference outputs which the actual output has to compare against (their mean or any of them) within a tolerance.
     - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
-- *sarah@#includecpp*: Output range of indices mapping each point to its cluster + return object `{vector of centroids, sbo_vector of cluster sizes, reference to input range, reference to output range}`
-    - Allocation of a clusters range is offloaded as an opt-in to the user, as permitted by the returned information
-    - No imposing of an intrusive custom type (Cluster) for the output range on the user
+- *sarah@#includecpp*: Output range of indices mapping each point to its cluster.
+    - take an input range of data points, and an output range of indices
+    - create a vector of k means, and a vector of sizes of each cluster
+    - for each iteration, iterate over the two ranges, get the ID of the nearest centroid to each data point, and write it to the output range
+    - update the means, repeat until convergence
+    - return object `{vector of centroids, sbo_vector of cluster sizes, reference to input range, reference to output range}`
+    - What's gained:
+        - Allocation of a clusters range is offloaded as an opt-in to the user, as permitted by the returned information
+        - No imposing of an intrusive custom type (Cluster) for the output range on the user
 - Lookup opportunities for `std::move`, in-place construction...etc.
 - Provide an interface for file input.
 - *dicroce@Reddit*: Write `auto_k_means`; start with K=1, iteratively employ k-means with greater K's until adding a new centroid implies most of the satellites assigned to it came from an existing cluster.
