@@ -164,11 +164,13 @@ struct distance_from{
 };
 
 template<typename T, std::size_t D>
-void init_centroids(auto&& out_clusters, auto const& data_points)
+void init_centroids(auto&& out_clusters,
+                    auto const& data_points,
+                    std::size_t k)
 {
     using cluster_t = Cluster<T, D>;    
-    auto centroids = FWD(out_clusters) | rnv::transform(&cluster_t::centroid);
-    auto const k = rn::distance(out_clusters);
+    auto centroids = FWD(out_clusters) |
+                     rnv::transform(&cluster_t::centroid);
     //Initialize centroids with a sample of K points from data_points
     if constexpr(std::floating_point<T>){
         rn::sample(data_points, rn::begin(centroids),
@@ -187,7 +189,7 @@ void init_centroids(auto&& out_clusters, auto const& data_points)
 
 template<typename T, std::size_t D>
 void update_satellites(auto&& clusters,
-                       auto&& non_centroid_data)
+                       auto&& data_points)
 {
     using cluster_t = Cluster<T, D>;
     
@@ -204,7 +206,7 @@ void update_satellites(auto&& clusters,
     [](DataPoint<T, D> const& pt){ return distance_from{ pt }; };
 
     //Dispatch every data point to the cluster whose centroid is closest
-    dispatch(FWD(non_centroid_data),
+    dispatch(FWD(data_points),
              FWD(clusters), 
              find_closest_centroid, comp_dist_to_centroid,
              &cluster_t::satellites, &cluster_t::centroid);
@@ -232,12 +234,13 @@ void update_centroids(auto&& out_clusters)
 }
 
 template<arithmetic PT_VALUE_T, std::size_t D>
-constexpr void k_means_impl(auto const& data_points, auto&& out_clusters,
+constexpr void k_means_impl(auto const& data_points,
+                            auto&& out_clusters,
                             std::size_t k, std::size_t n)
 {
     auto&& k_out_clusters = FWD(out_clusters) | rnv::take(k);
     
-    init_centroids<PT_VALUE_T, D>(k_out_clusters, data_points);
+    init_centroids<PT_VALUE_T, D>(k_out_clusters, data_points, k);
         
     update_satellites<PT_VALUE_T, D>(k_out_clusters, data_points);
 
