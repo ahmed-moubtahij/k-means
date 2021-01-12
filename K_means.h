@@ -275,7 +275,7 @@ concept clusters_out_range = rn::output_range< R, rn::range_value_t< R > >
 and rn::forward_range< R >
 and hlpr::is_cluster< rn::range_value_t< R > >::value;
 
-struct k_means_fun_obj{
+struct k_means_fn{
     constexpr void operator()
     (data_points_range auto const& data_points,
      clusters_out_range auto&& out_range, 
@@ -296,7 +296,7 @@ struct k_means_fun_obj{
 };
 
 //Callable object that the user can call or pass around
-constexpr inline kmn::k_means_fun_obj k_means{};
+constexpr inline kmn::k_means_fn k_means{};
 
 } // namespace kmn
 
