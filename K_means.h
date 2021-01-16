@@ -5,43 +5,25 @@
 #include <random>
 #include <numeric>
 #include <ranges>
+#include <range/v3/view/zip.hpp>
 #include <fmt/ranges.h>
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
 using fmt::print;
 
-//dispatch: Akin to a std::partition_copy albeit with output to multiple ranges
-//src_range should be const& but ranges::views don't support const begin/end
-template<std::ranges::input_range R1,
-         std::ranges::input_range R2,
-         typename F,
-         typename Comp = std::ranges::less,
-         typename Proj1 = std::identity,
-         typename Proj2 = std::identity>
-constexpr void dispatch(R1&& src_range,
-                        R2&& buckets, F dispatcher,
-                        Comp threeway_comp = {},
-                        Proj1 proj_bucket = {}, Proj2 proj_comp = {})
-{
-    for(auto&& e: FWD(src_range)){
-        auto& target_bucket = *dispatcher(FWD(buckets), threeway_comp(e), proj_comp);
-        std::invoke(proj_bucket, target_bucket).push_back(e);
-    }
-}
+template<typename ...Ts>
+[[deprecated]] constexpr bool print_type = true;
+
+template <typename... Ts> struct empty{};
+template <typename... Us, typename... Vs>
+[[deprecated]] auto show_types(Vs&&...) -> empty<Us..., Vs...>;
 
 namespace kmn{
 
 namespace rn = std::ranges;
 namespace rnv = rn::views;
-
-void print_clusters(auto const& clusters, std::size_t k)
-{
-    for(auto const& [centroid, satellites]: clusters | rnv::take(k)){
-        print("centroid: {}\nsatellites: {}\n\n",
-               centroid, satellites);
-    }
-}
+namespace rv3 = ranges::views;
 
 template<typename T>
 concept arithmetic = std::integral<T> or std::floating_point<T>;
@@ -97,14 +79,30 @@ struct DataPoint final : private std::array<T, D> {
     {
         DataPoint<double, D> res;
         rn::transform(*this, res.begin(),
-        [](value_type num){ return static_cast<U>(num); });
-                      
+                      [](value_type num)
+                      { return static_cast<U>(num); });
         return res;
     }
 };
 //DataPoint deduction guide
 template<arithmetic T, typename... Us>
 DataPoint(T, Us...) -> DataPoint<T, sizeof...(Us) + 1>;
+
+void make_clusters(auto const& kmn_result)
+{
+    auto&& [centroids, cluster_sizes] = kmn_result;
+    using cluster_t = DataPoint<int, 3>; //MOCK
+    
+    std::vector<cluster_t> clusters(cluster_sizes.size());
+    //TODO: reserve cluster_size for each cluster
+}
+
+void print_kmn_result(auto const& kmn_result)
+{
+    auto&& [centroids, cluster_sizes] = kmn_result;
+    print("Centroids:\n{}\n", centroids);
+    print("Centroid-aligned cluster sizes:\n{}\n", cluster_sizes);
+}
 
 namespace hlpr{
     template<typename T, std::size_t D>
@@ -120,20 +118,12 @@ namespace hlpr{
     template<typename T, std::size_t D>
     using select_centroid_t = typename select_centroid<T, D>::type;
 }
-//Aggregate template Cluster
-template<typename T, std::size_t D>
-struct Cluster{
-    using data_point_t = DataPoint<T, D>;
-    using centroid_t = hlpr::select_centroid_t<T, D>; 
-    using satellites_t = std::vector<data_point_t>; 
-    centroid_t centroid;    
-    satellites_t satellites;
-};
 
 //sqr_dist: computes euclidean square distance between two data points
 template<typename T1, typename T2, std::size_t D>
-auto sqr_distance(DataPoint<T1,D> const& dp1,
-                  DataPoint<T2,D> const& dp2)
+constexpr auto
+sqr_distance(DataPoint<T1,D> const& dp1,
+             DataPoint<T2,D> const& dp2)
 {
     return std::transform_reduce(
            dp1.cbegin(), dp1.cend(), dp2.cbegin(), 0,
@@ -154,27 +144,19 @@ struct distance_from{
     template<typename U>
     constexpr bool operator()(DataPoint<U, D> const& c1,
                               DataPoint<U, D> const& c2) const
-    {
-        auto const dist_c1_pt = sqr_distance(c1, m_pt);
-        auto const dist_c2_pt = sqr_distance(c2, m_pt);
-        if (dist_c1_pt == 0) return false; //if m_pt is c1, then c1 < c2 is false
-        if (dist_c2_pt == 0) return true;  //if m_pt is c2, then c1 < c2 is true
-        return dist_c1_pt < dist_c2_pt;
-    }
+    { return sqr_distance(c1, m_pt) < sqr_distance(c2, m_pt); }
 };
 
 template<typename T, std::size_t D>
-void init_centroids(auto&& out_clusters,
+void init_centroids(auto&& centroids,
                     auto const& data_points,
                     std::size_t k)
 {
-    using cluster_t = Cluster<T, D>;    
-    auto centroids = FWD(out_clusters) |
-                     rnv::transform(&cluster_t::centroid);
     //Initialize centroids with a sample of K points from data_points
     if constexpr(std::floating_point<T>){
-        rn::sample(data_points, rn::begin(centroids),
-                   k, std::mt19937{std::random_device{}()});
+        rn::sample(data_points,
+                   rn::begin(centroids), k,
+                   std::mt19937{std::random_device{}()});
     } else { //else, data_points is a range of DataPoints of integral value types T
         //T needs to be a floating point type to match centroids' T
         //because centroids get updated with data_points' means
@@ -184,70 +166,6 @@ void init_centroids(auto&& out_clusters,
                                  { return static_cast<DataPoint<double, D>>(pt); }),
                    rn::begin(centroids), k,
                    std::mt19937{std::random_device{}()});
-    }
-}
-
-template<typename T, std::size_t D>
-void update_satellites(auto&& clusters,
-                       auto&& data_points)
-{
-    using cluster_t = Cluster<T, D>;
-    
-    rn::for_each(clusters,
-                //explicitizing auto here to cluster_t::satellites_t doesn't compile on gcc 10.2                
-                 [](auto&& sats){ FWD(sats).clear(); },
-                 &cluster_t::satellites);
-    
-    auto constexpr find_closest_centroid =
-    [](auto&& clusters, auto comp, auto proj)
-    { return rn::min_element(FWD(clusters), comp, proj); };
-
-    auto constexpr comp_dist_to_centroid =
-    [](DataPoint<T, D> const& pt){ return distance_from{ pt }; };
-
-    //Dispatch every data point to the cluster whose centroid is closest
-    dispatch(FWD(data_points),
-             FWD(clusters), 
-             find_closest_centroid, comp_dist_to_centroid,
-             &cluster_t::satellites, &cluster_t::centroid);
-    
-}
-
-template<typename T, std::size_t D>
-void update_centroids(auto&& out_clusters)
-{
-    using cluster_t = Cluster<T, D>;
-    
-    auto constexpr mean =
-    [](cluster_t::satellites_t const& sats)
-    { return std::reduce(std::cbegin(sats), std::cend(sats)) / std::size(sats); };
-    
-    auto constexpr has_satellites =
-    [](cluster_t const& cluster)
-    { return not cluster.satellites.empty(); };
-    
-    auto&& centroids = FWD(out_clusters) | rnv::transform(&cluster_t::centroid);
-    //Update every centroid with its satellites mean
-    rn::transform(FWD(out_clusters) | rnv::filter(has_satellites),
-                  rn::begin(centroids),
-                  mean, &cluster_t::satellites);
-}
-
-template<arithmetic PT_VALUE_T, std::size_t D>
-constexpr void k_means_impl(auto const& data_points,
-                            auto&& out_clusters,
-                            std::size_t k, std::size_t n)
-{
-    auto&& k_out_clusters = FWD(out_clusters) | rnv::take(k);
-    
-    init_centroids<PT_VALUE_T, D>(k_out_clusters, data_points, k);
-        
-    update_satellites<PT_VALUE_T, D>(k_out_clusters, data_points);
-
-    while(n--)
-    {
-        update_centroids<PT_VALUE_T, D>(k_out_clusters);
-        update_satellites<PT_VALUE_T, D>(k_out_clusters, data_points);
     }
 }
 
@@ -261,41 +179,154 @@ namespace hlpr{
     struct data_point_size;
     template<typename T, std::size_t D>
     struct data_point_size<DataPoint<T, D>> : std::integral_constant<std::size_t, D> {};
-
-    template<typename T>
-    struct is_cluster : std::false_type {};
-    template<typename T, std::size_t D>
-    struct is_cluster<Cluster<T, D>> : std::true_type{};
 }
 template<typename R>
 concept data_points_range = hlpr::is_data_point<rn::range_value_t<R>>::value;
 
-template<typename R>
-concept clusters_out_range = rn::output_range< R, rn::range_value_t< R > >
-and rn::forward_range< R >
-and hlpr::is_cluster< rn::range_value_t< R > >::value;
+void update_centroids(auto const& data_points,
+                      auto&& out_indices,
+                      auto&& indexed_centroids)
+{
+    auto constexpr mean_matching_points =
+    [](data_points_range auto&& data_points)
+    {   using data_point_t = rn::range_value_t<decltype(data_points)>;
+        std::size_t count{};
+        //input range is a filter_view which is not a sized range
+        //so an elements' count is used instead of size()
+        auto const counted_sum = 
+        [&count](data_point_t const& pt1, data_point_t const& pt2)
+        { ++count; return pt1 + pt2; };
+        //count is a side effect of counted_sum,
+        //so sum must be calculated separately
+        auto const sum = std::reduce(data_points.begin(), data_points.end(),
+                                     data_point_t(), counted_sum);
+        return sum / count;
+    };
+
+    auto constexpr match_id =
+    [](std::size_t cent_id)
+    {   return [cent_id](auto const& indexed_point)
+               //cent_id is captured by value so that this inner lambda
+               //isn't called holding a reference to it when it's out-of-scope
+               { return cent_id == get<0>(indexed_point); };
+    };
+    
+    auto const indexed_points = rv3::zip(FWD(out_indices), data_points);
+
+    rn::transform(FWD(indexed_centroids) | rnv::keys,
+                  rn::begin(FWD(indexed_centroids) | rnv::values),
+                  [&](auto const& cent_id)
+                  {   return mean_matching_points(indexed_points
+                                                  | rnv::filter(match_id(cent_id))
+                                                  | rnv::values);
+                  });
+}
+
+void index_points_by_centroids(auto&& out_indices,
+                               auto const& data_points,
+                               auto const& indexed_centroids)
+{
+    auto constexpr dist_from_centroid =
+    [](auto const& pt){ return distance_from{ pt }; };
+
+    auto constexpr proj_centroid =
+    [](auto const& id_pt){ return id_pt.second; };
+
+    auto const find_id_nearest_centroid =
+    [&](auto const& pt) //rn::borrowed_iterator has no operator->
+    {   return (*rn::min_element(indexed_centroids,
+                                 dist_from_centroid(pt),
+                                 proj_centroid)).first;
+    };
+    //Find the ID of the nearest centroid to each data point,
+    //and write it to the output range
+    rn::transform(data_points,
+                  std::begin(FWD(out_indices)),
+                  find_id_nearest_centroid);
+}
+
+void populate_cluster_sizes(auto&& cluster_sizes,
+                            auto const& centroid_ids,
+                            auto const& out_indices)
+{
+    auto const count_indices =
+    [&out_indices](std::size_t index)
+    { return rn::count(out_indices, index); };
+
+    rn::transform(centroid_ids,
+                  FWD(cluster_sizes).begin(),
+                  count_indices);
+}
+
+template<typename C>
+struct k_means_result{
+    std::vector<C> centroids;
+    std::vector<std::size_t> cluster_sizes;
+    // reference to input range
+    // reference to output range
+    //TODO: Enforce size equality on centroids and cluster_sizes
+    //TODO: Enforce size equality on i/o ranges
+};
+
+template<typename PT_VALUE_T, std::size_t D>
+using centroid_t = hlpr::select_centroid_t<PT_VALUE_T, D>;
+
+template<typename PT_VALUE_T, std::size_t D>
+constexpr auto
+k_means_impl(auto const& data_points,
+             auto&& out_indices,
+             std::size_t k, std::size_t n)
+-> k_means_result<centroid_t<PT_VALUE_T, D>>
+{
+    if(k < 2) return {};
+        
+    if(auto const pts_size = rn::distance(data_points);
+       pts_size < k or pts_size != rn::size(out_indices))
+        return {};
+
+    std::vector<std::size_t> cluster_sizes(k);
+    
+    std::vector<centroid_t<PT_VALUE_T, D>> centroids(k);
+    std::vector<std::size_t> ids(k);
+    auto indexed_centroids = rv3::zip(ids, centroids);
+    
+    //Initialize centroid ids
+    auto centroid_ids = rnv::keys(indexed_centroids);
+    std::iota(std::begin(centroid_ids), std::end(centroid_ids), 1);
+
+    init_centroids<PT_VALUE_T, D>(rnv::values(indexed_centroids), data_points, k);
+
+    index_points_by_centroids(out_indices, data_points, indexed_centroids);
+
+    //Update the centroids with means, repeat n times
+    while(n--)
+    { update_centroids(data_points,
+                       out_indices,
+                       indexed_centroids);
+    }
+
+    populate_cluster_sizes(cluster_sizes, centroid_ids, out_indices);
+
+    return {centroids, cluster_sizes};
+}
 
 struct k_means_fn{
-    constexpr void operator()
+    constexpr auto operator()
     (data_points_range auto const& data_points,
-     clusters_out_range auto&& out_range, 
+     std::vector<size_t>& out_indices, 
      std::size_t k, std::size_t n) const
-        //Ensure that the output clusters' data point types are the same
-        //(in value type and size) as the input range's data point types
-        requires (std::is_same_v<rn::range_value_t<decltype(data_points)>,
-                                typename rn::range_value_t<decltype(out_range)>::data_point_t>)
-    {     
-        if (rn::distance(data_points) < k or k < 2) return;
-             
+    {
         using data_point_t = rn::range_value_t<decltype(data_points)>;
         using point_value_t = data_point_t::value_type;
         auto constexpr dimension = hlpr::data_point_size<data_point_t>::value;
 
-        k_means_impl<point_value_t, dimension>(FWD(data_points), FWD(out_range), k, n);
+        return k_means_impl<point_value_t, dimension>(FWD(data_points),
+                                                      out_indices,
+                                                      k, n);
     }
 };
 
-//Callable object that the user can call or pass around
+//k_means: Callable object that the user can call or pass around
 constexpr inline kmn::k_means_fn k_means{};
 
 } // namespace kmn
@@ -303,7 +334,7 @@ constexpr inline kmn::k_means_fn k_means{};
 
 int main(){
     using std::array, std::vector, kmn::DataPoint;
-    using kmn::print_clusters, kmn::k_means;
+    using kmn::print_kmn_result, kmn::k_means;
 
     //INPUT ranges
     auto const int_arr_df =
@@ -334,17 +365,13 @@ int main(){
           DataPoint(28, 29, 30), DataPoint(31, 32, 33), DataPoint(34, 35, 36),
           DataPoint(37, 38, 39), DataPoint(40, 41, 42), DataPoint(43, 44, 45)};
 
-
     //OUTPUT range
-    std::array<kmn::Cluster<int, 3>, 6> clusters;
+    std::vector<std::size_t> out_indices(int_arr_df.size());
     
-    //CALL
+    //CALL & DISPLAY RESULT
     std::size_t const k{ 4 }, n{ 10 };
-    k_means(int_arr_df, clusters, k, n);
-    
-    //DISPLAY
-    print("OUTPUT clusters:\n\n");
-    print_clusters(clusters, k);
+    print_kmn_result(k_means(int_arr_df, out_indices, k, n));
+    // k_means(int_arr_df, out_indices, k, n)
 
     return 0;
 }
