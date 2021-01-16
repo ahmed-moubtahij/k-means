@@ -56,7 +56,7 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
 
 ## TODO
 - Decide if the checks for pt==centroid in `distance_from` are still necessary.
-- *sarah@#includecpp*: Output range of indices mapping each point to its cluster.
+- *sarah@#includecpp*: Output range of indices mapping each point to its cluster. (Provided as an overload)
     - take an input range of data points, and an output range of indices
     - create a vector of k means, and a vector of sizes of each cluster
     - for each iteration, iterate over the two ranges, get the ID of the nearest centroid to each data point, and write it to the output range
