@@ -167,6 +167,8 @@ namespace hlpr
     struct data_point_size;
     template<typename T, size_type D>
     struct data_point_size<DataPoint<T, D>> : std::integral_constant<size_type, D> {};
+    template<typename T>
+    inline constexpr size_type data_point_size_v = data_point_size<T>::value;
 }
 
 template<typename R>
@@ -382,19 +384,19 @@ template<typename R>
 using data_point_t = range_value_t<R>;
 template<typename R>
 using point_value_t = data_point_t<R>::value_type;
-//TODO: Write a data_point_size_v
+
 template<typename R>
-using k_means_impl_t =
+using k_means_impl_t = 
 decltype(k_means_impl<point_value_t<R>,
-                      hlpr::data_point_size<data_point_t<R>>::value>
+                      hlpr::data_point_size_v<data_point_t<R>>>
          (declval<R>(), declval<indices_t&>(),
           declval<size_type>(), declval<size_type>()));
 
 struct k_means_fn
 { template<data_points_range R>
   constexpr auto operator()
-  (R&& data_points, //not mutated but a reference to it is returned;
-                    //&& for referring or moving depending on value category
+  (R&& data_points,        //not mutated but a reference to it is returned;
+                           //&& for referring or moving depending on value category
    indices_t& out_indices, //TODO: Rangify this. //is an rvalue reference to handle rvalue arguments
                            //such as views-like objects
    size_type k, size_type n) const noexcept
@@ -404,11 +406,9 @@ struct k_means_fn
     if(auto const pts_size = rn::distance(data_points);
        pts_size < k or pts_size != rn::size(out_indices))
        return std::nullopt;
-      
-    auto constexpr dimension =
-    hlpr::data_point_size<data_point_t<R>>::value;   
     
-    return { k_means_impl<point_value_t<R>, dimension>
+    return { k_means_impl<point_value_t<R>,
+                          hlpr::data_point_size_v<data_point_t<R>>>
              (FWD(data_points), out_indices, k, n) };
   }
 };
