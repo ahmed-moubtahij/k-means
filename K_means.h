@@ -8,7 +8,7 @@
 #include <ranges>
 #include <range/v3/view/zip.hpp>
 #include <range/v3/view/filter.hpp>
-#include <range/v3/view/map.hpp> //rv3::{keys, values}
+#include <range/v3/view/map.hpp> //ranges::views::values
 #include <fmt/ranges.h>
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
@@ -17,21 +17,23 @@ using fmt::print;
 
 namespace kmn{
 
+using size_type = std::size_t;
+
 namespace rn = std::ranges;
 namespace rnv = rn::views;
-namespace rv3 = ranges::views;
-
+namespace rv3 = ranges::views; //used when rnv's current implementation has bugs
 using rn::range_value_t;
 using rnv::filter;
 using rnv::keys;
 using rnv::values;
-
 using rv3::zip;
+
+using std::declval;
 
 template<typename T>
 concept arithmetic = std::integral<T> or std::floating_point<T>;
 //Class template DataPoint
-template<arithmetic T, std::size_t D>
+template<arithmetic T, size_type D>
 struct DataPoint final : private std::array<T, D> {
     using typename std::array<T, D>::value_type;
     using std::array<T, D>::begin;
@@ -88,22 +90,22 @@ template<arithmetic T, typename... Us>
 DataPoint(T, Us...) -> DataPoint<T, sizeof...(Us) + 1>;
 
 namespace hlpr{
-    template<typename T, std::size_t D>
+    template<typename T, size_type D>
     struct select_centroid
     //A DataPoint's value type T is constrained to be arithmetic
     //So T here is an integral if the floating_point overload is discarded
     { using type = DataPoint<double, D>; };
 
-    template<std::floating_point T, std::size_t D>
+    template<std::floating_point T, size_type D>
     struct select_centroid<T, D>
     { using type = DataPoint<T, D>; };
 
-    template<typename T, std::size_t D>
+    template<typename T, size_type D>
     using select_centroid_t = typename select_centroid<T, D>::type;
 }
 
 //sqr_dist: computes euclidean square distance between two data points
-template<typename T1, typename T2, std::size_t D>
+template<typename T1, typename T2, size_type D>
 constexpr auto
 sqr_distance(DataPoint<T1,D> const& dp1,
              DataPoint<T2,D> const& dp2)
@@ -114,25 +116,26 @@ sqr_distance(DataPoint<T1,D> const& dp1,
 };
 //distance_from: Function Object Comparator
 //               of distances from two points to a reference point
-template<typename T, std::size_t D>
+template<typename T, size_type D>
 struct distance_from
-{   using ref_point_t = DataPoint<T, D>;
-    ref_point_t m_pt;
+{ using ref_point_t = DataPoint<T, D>;
+  ref_point_t m_pt;
     
-    distance_from() = delete;
-    distance_from& operator=(distance_from const&) = delete;
-    constexpr distance_from(ref_point_t const& pt) : m_pt{pt} {}
-    
-    template<typename U>
-    constexpr bool operator()(DataPoint<U, D> const& c1,
-                              DataPoint<U, D> const& c2) const
-    { return sqr_distance(c1, m_pt) < sqr_distance(c2, m_pt); }
+  distance_from() = delete;
+  distance_from& operator=(distance_from const&) = delete;
+  constexpr distance_from(ref_point_t const& pt) : m_pt{pt} {}
+  
+  template<typename U>
+  constexpr auto operator()
+  (DataPoint<U, D> const& c1, DataPoint<U, D> const& c2)
+  const -> bool
+  { return sqr_distance(c1, m_pt) < sqr_distance(c2, m_pt); }
 };
 
-template<typename T, std::size_t D>
+template<typename T, size_type D>
 void init_centroids(auto&& indexed_centroids,
                     auto const& data_points,
-                    std::size_t k)
+                    size_type k)
 { //Initialize centroid ids
   rn::generate(indexed_centroids | keys,
                [n=1]() mutable { return n++; });
@@ -157,13 +160,13 @@ void init_centroids(auto&& indexed_centroids,
 namespace hlpr
 {   template<typename T>
     struct is_data_point : std::false_type {};
-    template<typename T, std::size_t D>
+    template<typename T, size_type D>
     struct is_data_point<DataPoint<T, D>> : std::true_type {};
     
     template<typename T>
     struct data_point_size;
-    template<typename T, std::size_t D>
-    struct data_point_size<DataPoint<T, D>> : std::integral_constant<std::size_t, D> {};
+    template<typename T, size_type D>
+    struct data_point_size<DataPoint<T, D>> : std::integral_constant<size_type, D> {};
 }
 
 template<typename R>
@@ -171,45 +174,43 @@ concept data_points_range = hlpr::is_data_point<rn::range_value_t<R>>::value;
 
 //This is used in update_centroids and in k_means_result
 struct match_id
-{ std::size_t cent_id;
-  constexpr auto
-  operator()(auto const& indexed_point) const -> bool
+{ size_type cent_id;
+  constexpr bool operator()
+  (auto const& indexed_point) const
   { return cent_id == get<0>(indexed_point); }
 };
 
-void update_centroids(auto const& data_points,
+void update_centroids(auto&& data_points,
                       auto&& out_indices,
                       auto&& indexed_centroids)
-{   auto constexpr mean_matching_points =
-    [](data_points_range auto&& data_points)
-    {   using data_point_t = range_value_t<decltype(data_points)>;
-        std::size_t count{};
-        //input range is a filter_view which is not a sized range
-        //so an elements' count is used instead of size()
-        auto const counted_sum = 
-        [&count](data_point_t const& pt1, data_point_t const& pt2)
-        { ++count; return pt1 + pt2; };
-        //count is a side effect of counted_sum,
-        //so sum must be calculated separately
-        auto const sum = std::reduce(rn::begin(data_points),
-                                     rn::end(data_points),
-                                     data_point_t(), counted_sum);
-        return sum / count;
-    };
+{ auto constexpr mean_matching_points =
+  [](data_points_range auto&& data_points)
+  {   using data_point_t = range_value_t<decltype(data_points)>;
+      size_type count{};
+      //input range is a filter_view which is not a sized range
+      //so an elements' count is used instead of size()
+      auto const counted_sum = 
+      [&count](data_point_t const& pt1, data_point_t const& pt2)
+      { ++count; return pt1 + pt2; };
+      //count is a side effect of counted_sum,
+      //so sum must be calculated separately
+      auto const sum = std::reduce(rn::begin(data_points),
+                                   rn::end(data_points),
+                                   data_point_t(), counted_sum);
+      return sum / count;
+  };
 
-    auto const indexed_points = zip(FWD(out_indices), data_points);
-
-    rn::transform(FWD(indexed_centroids) | keys,
-                  rn::begin(FWD(indexed_centroids) | values),
-                  [&](auto const& cent_id)
-                  { return mean_matching_points(indexed_points
-                                                | filter(match_id{cent_id})
-                                                | values);
-                  });
+  rn::transform(FWD(indexed_centroids) | keys,
+                rn::begin(FWD(indexed_centroids) | values),
+                [&](auto const& cent_id)
+                { return mean_matching_points(zip(FWD(out_indices), FWD(data_points))
+                                              | rv3::filter(match_id{cent_id})
+                                              | rv3::values);
+                });
 }
 
 void index_points_by_centroids(auto&& out_indices,
-                               auto const& data_points,
+                               auto&& data_points,
                                auto const& indexed_centroids)
 {   auto constexpr dist_from_centroid =
     [](auto const& pt){ return distance_from{ pt }; };
@@ -226,7 +227,7 @@ void index_points_by_centroids(auto&& out_indices,
     };
     //Find the ID of the nearest centroid to each data point,
     //and write it to the output range
-    rn::transform(data_points,
+    rn::transform(FWD(data_points),
                   std::begin(FWD(out_indices)),
                   find_id_nearest_centroid);
 }
@@ -234,16 +235,15 @@ void index_points_by_centroids(auto&& out_indices,
 void set_cluster_sizes(auto&& cluster_sizes,
                        auto const& out_indices)
 {   auto const count_indices =
-    [&out_indices](std::size_t index)
+    [&out_indices](size_type index)
     { return rn::count(out_indices, index); };
 
-    rn::transform(rnv::iota(std::size_t{1},
+    rn::transform(rnv::iota(std::size_t{ 1 },
                             cluster_sizes.size()),
                   std::begin(FWD(cluster_sizes)),
                   count_indices);
 }
 
-using std::declval;
 template <typename CENTROIDS_R, typename SIZES_R,
           typename Input_Range, typename Output_Range>
 struct k_means_result
@@ -251,12 +251,11 @@ struct k_means_result
   //      so as to not risk type mismatch with call site
   CENTROIDS_R centroids;
   SIZES_R sizes;
-  
+  // TODO:
   // i don't think they should be references in all cases
   // what i would do is return a reference depending on the value category of the input
   // if it's an l-value, turn it into a reference
-  // if it's an r-value, move it in
-  // that way
+  // if it's an r-value, move it in, that way:
   // vector<size_t> indices = ...;
   // auto result = my_algo(indices, get_points(), etc);
   // won't lead to dangling references
@@ -272,7 +271,7 @@ struct k_means_result
   using filtered_indexed_range =
   decltype(declval<indexed_range>() 
            | rv3::filter(match_id{0}));
-  //rnv::{filter, values} don't work here but rv3's do
+  
   using filtered_range =
   decltype(declval<filtered_indexed_range>()
            | rv3::values);
@@ -284,7 +283,7 @@ struct k_means_result
   
   struct iterator
   { k_means_result& parent;
-    std::size_t cluster_idx;
+    size_type cluster_idx;
   
     auto operator*() const -> cluster
     { return { parent.centroids[cluster_idx],
@@ -296,10 +295,11 @@ struct k_means_result
     
     auto operator++() -> iterator& { ++cluster_idx; }
     
-    friend auto operator==(iterator lhs, iterator rhs) -> bool
+    friend bool operator==(iterator lhs, iterator rhs)
     { return lhs.cluster_idx == rhs.cluster_idx; }
   };
 
+// TODO
 //   //k_means_result is for viewing only => only const iterators are provided
 //   auto begin() const -> iterator { return {*this, 0}; }
 //   auto end() const -> iterator { return {*this, sizes.size()}; }
@@ -342,75 +342,79 @@ void print_kmn_result(auto const& kmn_result)
   }
 }
 
-template<typename PT_VALUE_T, std::size_t D>
+template<typename PT_VALUE_T, size_type D>
 using centroid_t = hlpr::select_centroid_t<PT_VALUE_T, D>;
 
-template<typename PT_VALUE_T, std::size_t D>
+template<typename PT_VALUE_T, size_type D>
 constexpr auto
 k_means_impl(auto&& data_points,
              auto&& out_indices,
-             std::size_t k, std::size_t n)
-//data_points is not mutated but a reference to it is returned;
-//forwarding reference is needed for handling value category
+             size_type k, size_type n)
+-> k_means_result<std::vector<centroid_t<PT_VALUE_T, D>>,
+                  std::vector<size_type>,
+                  decltype(data_points),
+                  decltype(out_indices)>
+{ using std::vector, std::iota, std::begin, std::end;
+  vector<size_type> cluster_sizes(k);
+    
+  vector<centroid_t<PT_VALUE_T, D>> centroids(k);
+  vector<size_type> ids(k);
+  
+  auto indexed_centroids = zip(ids, centroids);
+  //Initialize centroid ids
+  init_centroids<PT_VALUE_T, D>(indexed_centroids, data_points, k);  
+  index_points_by_centroids(out_indices, data_points, indexed_centroids);  
+  //Update the centroids with means, repeat n times
+  while(n--)
+  { update_centroids(data_points,
+                     out_indices,
+                     indexed_centroids);
+  }  
+  set_cluster_sizes(cluster_sizes, out_indices);
+  
+  return { centroids, cluster_sizes,
+           FWD(data_points), FWD(out_indices)
+         };
+}
 
-//out_indices is an rvalue reference to handle rvalue arguments
-//such as spans or subslices of it
+using indices_t = std::vector<size_type>; 
+template<typename R>
+using data_point_t = range_value_t<R>;
+template<typename R>
+using point_value_t = data_point_t<R>::value_type;
+//TODO: Write a data_point_size_v
+template<typename R>
+using k_means_impl_t =
+decltype(k_means_impl<point_value_t<R>,
+                      hlpr::data_point_size<data_point_t<R>>::value>
+         (declval<R>(), declval<indices_t&>(),
+          declval<size_type>(), declval<size_type>()));
 
-// -> k_means_result<std::vector<centroid_t<PT_VALUE_T, D>>,
-//                   std::vector<std::size_t>,
-//                   std::remove_const_t<decltype(data_points)>,
-//                   std::remove_const_t<decltype(out_indices)>>
-{   /*if(k < 2) return std::nullopt;
+struct k_means_fn
+{ template<data_points_range R>
+  constexpr auto operator()
+  (R&& data_points, //not mutated but a reference to it is returned;
+                    //&& for referring or moving depending on value category
+   indices_t& out_indices, //TODO: Rangify this. //is an rvalue reference to handle rvalue arguments
+                           //such as views-like objects
+   size_type k, size_type n) const noexcept
+  -> std::optional<k_means_impl_t<R>>
+  { if(k < 2) return std::nullopt;
     
     if(auto const pts_size = rn::distance(data_points);
        pts_size < k or pts_size != rn::size(out_indices))
-        return std::nullopt;*/
-
-    using std::vector, std::iota, std::begin, std::end;
-    vector<std::size_t> cluster_sizes(k);
-    
-    vector<centroid_t<PT_VALUE_T, D>> centroids(k);
-    vector<std::size_t> ids(k);
-    
-    auto indexed_centroids = zip(ids, centroids);
-    //Initialize centroid ids
-    init_centroids<PT_VALUE_T, D>(indexed_centroids, data_points, k);
-
-    index_points_by_centroids(out_indices, data_points, indexed_centroids);
-
-    //Update the centroids with means, repeat n times
-    while(n--)
-    { update_centroids(data_points,
-                       out_indices,
-                       indexed_centroids);
-    }
-
-    set_cluster_sizes(cluster_sizes, out_indices);
-
-    return /*std::optional<*/k_means_result/*>*/
-           { centroids, cluster_sizes,
-             FWD(data_points), FWD(out_indices)
-           };
-}
-
-struct k_means_fn
-{ constexpr auto operator()
-  (data_points_range auto const& data_points,
-   std::vector<size_t>& out_indices, 
-   std::size_t k, std::size_t n) const
-  { using data_point_t = range_value_t<decltype(data_points)>;
-    using point_value_t = data_point_t::value_type;
-    
+       return std::nullopt;
+      
     auto constexpr dimension =
-    hlpr::data_point_size<data_point_t>::value;   
+    hlpr::data_point_size<data_point_t<R>>::value;   
     
-    return k_means_impl<point_value_t, dimension>
-           (FWD(data_points), out_indices, k, n);
+    return { k_means_impl<point_value_t<R>, dimension>
+             (FWD(data_points), out_indices, k, n) };
   }
 };
 
 //k_means: Callable object that the user can call or pass around
-constexpr inline kmn::k_means_fn k_means{};
+constexpr inline k_means_fn k_means{};
 
 } // namespace kmn
 
@@ -452,8 +456,8 @@ int main(){
     
     //CALL & DISPLAY RESULT
     std::size_t const k{ 4 }, n{ 10 };
-    k_means(int_arr_df, out_indices, k, n);
-    // print_kmn_result(*k_means(int_arr_df, out_indices, k, n));
+    // k_means(int_arr_df, out_indices, k, n);
+    print_kmn_result(*k_means(int_arr_df, out_indices, k, n));
 
     return 0;
 }
