@@ -162,6 +162,8 @@ namespace hlpr
     struct is_data_point : std::false_type {};
     template<typename T, size_type D>
     struct is_data_point<DataPoint<T, D>> : std::true_type {};
+    template<typename T>
+    inline constexpr bool is_data_point_v = is_data_point<T>::value;
     
     template<typename T>
     struct data_point_size;
@@ -170,9 +172,6 @@ namespace hlpr
     template<typename T>
     inline constexpr size_type data_point_size_v = data_point_size<T>::value;
 }
-
-template<typename R>
-concept data_points_range = hlpr::is_data_point<rn::range_value_t<R>>::value;
 
 //This is used in update_centroids and in k_means_result
 struct match_id
@@ -186,7 +185,7 @@ void update_centroids(auto&& data_points,
                       auto&& out_indices,
                       auto&& indexed_centroids)
 { auto constexpr mean_matching_points =
-  [](data_points_range auto&& data_points)
+  [](auto&& data_points)
   {   using data_point_t = range_value_t<decltype(data_points)>;
       size_type count{};
       //input range is a filter_view which is not a sized range
@@ -379,28 +378,32 @@ k_means_impl(auto&& data_points,
          };
 }
 
-using indices_t = std::vector<size_type>; 
 template<typename R>
 using data_point_t = range_value_t<R>;
 template<typename R>
 using point_value_t = data_point_t<R>::value_type;
 
-template<typename R>
+template<typename R, typename S>
 using k_means_impl_t = 
 decltype(k_means_impl<point_value_t<R>,
                       hlpr::data_point_size_v<data_point_t<R>>>
-         (declval<R>(), declval<indices_t&>(),
+         (declval<R>(), declval<S>(),
           declval<size_type>(), declval<size_type>()));
 
+template<typename R>
+concept data_points_range = hlpr::is_data_point_v<range_value_t<R>>;
+template<typename R>
+concept sizes_range = std::unsigned_integral<range_value_t<R>>;
+
 struct k_means_fn
-{ template<data_points_range R>
+{ template<data_points_range R, sizes_range S>
   constexpr auto operator()
-  (R&& data_points,        //not mutated but a reference to it is returned;
-                           //&& for referring or moving depending on value category
-   indices_t& out_indices, //TODO: Rangify this. //is an rvalue reference to handle rvalue arguments
-                           //such as views-like objects
+  (R&& data_points, //not mutated but a reference to it is returned;
+                    //&& for referring or moving depending on value category
+   S&& out_indices, //is an rvalue reference to handle rvalue arguments
+                    //such as views-like objects
    size_type k, size_type n) const noexcept
-  -> std::optional<k_means_impl_t<R>>
+  -> std::optional<k_means_impl_t<R, S>>
   { if(k < 2) return std::nullopt;
     
     if(auto const pts_size = rn::distance(data_points);
