@@ -30,8 +30,6 @@ using rv3::zip;
 
 using std::declval;
 
-//TODO: Start from the bottom and simplify passed types
-
 template<typename T>
 concept arithmetic = std::integral<T> or std::floating_point<T>;
 
@@ -261,11 +259,12 @@ void set_cluster_sizes(auto&& cluster_sizes,
     { return rn::count(out_indices, index); };
 
     rn::transform(rnv::iota(std::size_t{ 1 },
-                            cluster_sizes.size()),
+                            cluster_sizes.size() + 1),
                   std::begin(FWD(cluster_sizes)),
                   count_indices);
 }
 
+//TODO: See what should be const here and const it if rnv allows it
 template <typename CENTROIDS_R, typename SIZES_R,
           typename Input_Range, typename Output_Range>
 struct k_means_result
@@ -279,75 +278,42 @@ struct k_means_result
   
   using filtered_indexed_range =
   decltype(declval<indexed_range>() 
-           | rv3::filter(match_id{ 0 }));
+           | rv3::filter(match_id{}));
   
   using filtered_range =
   decltype(declval<filtered_indexed_range>()
            | rv3::values);
   
-  struct cluster
-  { range_value_t<CENTROIDS_R> const& centroid;
-    filtered_range satellites;
-  };
   
   struct iterator
   { k_means_result& parent;
     size_type cluster_idx;
-  
-    auto operator*() const -> cluster
+    struct cluster
+    { range_value_t<CENTROIDS_R>& centroid;
+      filtered_range satellites;
+    };
+    auto operator*() -> cluster
     { return { parent.centroids[cluster_idx],
                zip(FWD(parent.out_indices), FWD(parent.points))
-               | filter(match_id{ cluster_idx })
-               | values
+               | rv3::filter(match_id{ cluster_idx + 1 })
+               | rv3::values
              };
     }
     
-    auto operator++() -> iterator& { ++cluster_idx; }
+    void operator++() { ++cluster_idx; }
     
     friend bool operator==(iterator lhs, iterator rhs)
     { return lhs.cluster_idx == rhs.cluster_idx; }
   };
 
-// TODO
-//   //k_means_result is for viewing only => only const iterators are provided
-//   auto begin() const -> iterator { return {*this, 0}; }
-//   auto end() const -> iterator { return {*this, sizes.size()}; }
+  auto begin() -> iterator { return { *this, size_type{ 0 } }; }
+  auto end() -> iterator { return { *this, sizes.size() }; }
 };
 
-/*[[nodiscard]]*/auto extract_constellations(auto const& kmn_result)
-{ //Constellation: Group of points surrounding a centroid
-  auto const& [_0, cluster_sizes, _2, out_indices] = kmn_result;
-  
-  using data_point_t = std::remove_cvref_t<decltype(kmn_result)>::data_point_t;
-  using constellation_t = std::vector<data_point_t>;
-  using constellations_t = std::vector<constellation_t>;
-  
-  auto const k = cluster_sizes.size();
-  constellations_t constellations; constellations.reserve(k);
-  
-  rn::for_each(zip(constellations, cluster_sizes),
-               [](auto&& constellation_and_size)
-               { auto&& [constellation, size] = constellation_and_size;
-                 constellation.reserve(size);
-               });
-
-  //rn::transform(constellations, kmn_result)
-  //TODO
-//   for(auto const& e: kmn_result){ }
-
-}
-
-void print_kmn_result(auto const& kmn_result)
-{ 
-  //TODO
-//   auto const constellations = extract_constellations(kmn_result);
-  //TODO: Look into writing this for statement better
-  for(auto const& [centroids, cluster_sizes, _2, _3] = kmn_result;
-      auto const& [centroid, cluster_size]: zip(centroids, cluster_sizes))
-  { 
-    
-    print("Centroid: {}\nSatellites: \nCluster population: {}\n\n",
-           centroid, cluster_size);
+void print_kmn_result(auto&& kmn_result)
+{ for(auto&& [centroid, satellites] : FWD(kmn_result))    
+  { print("Centroid: {}\n", FWD(centroid));    
+    print("Satellites: {}\n\n", FWD(satellites));
   }
 }
 
@@ -458,6 +424,7 @@ int main(){
     std::size_t const k{ 4 }, n{ 10 };
     // k_means(int_arr_df, out_indices, k, n);
     print_kmn_result(*k_means(int_arr_df, out_indices, k, n));
+    //UNIT TEST: Ensure #satellites ==  #data_points
 
     return 0;
 }
