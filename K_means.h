@@ -8,7 +8,7 @@
 #include <ranges>
 #include <range/v3/view/zip.hpp>
 #include <range/v3/view/filter.hpp>
-#include <range/v3/view/map.hpp> //ranges::views::values
+#include <range/v3/view/map.hpp> //ranges::views::{keys, values}
 #include <fmt/ranges.h>
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
@@ -21,12 +21,12 @@ using size_type = std::size_t;
 namespace rn = std::ranges;
 namespace rnv = rn::views;
 namespace r3 = ranges; //TODO: This should be rv3 as in "range v3" //used when std::ranges bugs
-namespace rv3 = r3::views; //TODO: This should be rv3v
+namespace rv3 = r3::views; //TODO: This should be r3v
 
 using rn::range_value_t;
 using rnv::filter;
-using rnv::keys;
-using rnv::values;
+using rnv::keys, rnv::values;
+
 using rv3::zip;
 
 using std::declval;
@@ -50,9 +50,6 @@ namespace hlpr
   //T is pre-constrained to being an arithmetic type in DataPoint
   template<typename T, size_type D>
   using select_centroid_t = typename select_centroid<T, D>::type;
-  //centroid_t: Terser alias
-  template<typename PT_VALUE_T, size_type D>
-  using centroid_t = select_centroid_t<PT_VALUE_T, D>;
   /************************* is_data_point *******************************/
   template<typename T>
   struct is_data_point : std::false_type {};
@@ -152,12 +149,12 @@ sqr_distance(DataPoint<T1,D> const& dp1,
 //               of distances from two points to a reference point
 template<typename T, size_type D>
 struct distance_from
-{ using ref_point_t = DataPoint<T, D>;
-  ref_point_t m_pt;
+{ using target_point_t = DataPoint<T, D>;
+  target_point_t m_pt;
     
   distance_from() = delete;
   distance_from& operator=(distance_from const&) = delete;
-  constexpr distance_from(ref_point_t const& pt) : m_pt{pt} {}
+  constexpr distance_from(target_point_t const& pt) : m_pt{pt} {}
   
   template<typename U>
   constexpr auto operator()
@@ -167,34 +164,30 @@ struct distance_from
 };
 
 template<typename PTS_R>
-using centroid_type =
-centroid_t<point_value_t<PTS_R>,
-           data_point_size_v<data_point_t<PTS_R>>>;
-
-template<typename PTS_R>
-using indexed_centroids_t =
-vector<std::pair<size_type, centroid_type<PTS_R>>>;
+using centroid_t =
+select_centroid_t<point_value_t<PTS_R>,
+                  data_point_size_v<data_point_t<PTS_R>>>;
 
 template<typename PTS_R>
 auto init_centroids(PTS_R&& data_points, size_type k)
--> indexed_centroids_t<PTS_R>
+-> vector<std::pair<size_type, centroid_t<PTS_R>>>
 {
   using PT_VALUE_T = point_value_t<PTS_R>;
   
   //TODO: reserve-init these and have rn::sample write to a back inserter
   vector<size_type> ids(k);
-  vector<centroid_type<PTS_R>> centroids(k);
+  vector<centroid_t<PTS_R>> centroids(k);
   auto indexed_centroids = zip(ids, centroids);
   
   //Initialize centroid ids
   //TODO: Look into indexed_centroids | rv3::keys = rnv::iota(1, k + 1)
-  rn::generate(indexed_centroids | rv3::keys,
+  rn::generate(indexed_centroids | rnv::keys,
                [n = 1]() mutable { return n++; });
 
   //Initialize centroids with a sample of K points from data_points
   if constexpr(std::floating_point<PT_VALUE_T>){
       rn::sample(FWD(data_points),
-                 r3::begin(indexed_centroids | rv3::values),
+                 rn::begin(indexed_centroids | values),
                  k, std::mt19937{std::random_device{}()});
   } else {
       //data_points here has integral value types T
@@ -206,14 +199,13 @@ auto init_centroids(PTS_R&& data_points, size_type k)
                  | rnv::transform(
                    [](DataPoint<PT_VALUE_T, DIM> const& pt)
                    { return static_cast<DataPoint<double, DIM>>(pt); }),
-                 //COMPILATION ERROR: Try reproducing in a minimal example
-                 r3::begin(indexed_centroids | rv3::values),
+                 rn::begin(indexed_centroids | values),
                  k, std::mt19937{std::random_device{}()});
   }
   return { rn::begin(indexed_centroids), rn::end(indexed_centroids) };
 }
 
-//This is used in update_centroids and in k_means_result
+//match_id: Used in update_centroids and in k_means_result
 struct match_id
 { size_type cent_id;
   constexpr bool operator()
@@ -241,8 +233,8 @@ void update_centroids(auto&& data_points,
     return sum / count;
   };
 
-  rn::transform(indexed_centroids | rv3::keys,
-                r3::begin( indexed_centroids | rv3::values),
+  rn::transform(indexed_centroids | keys,
+                rn::begin( indexed_centroids | values),
                 [&](auto const& cent_id)
                 { return mean_matching_points(zip(FWD(out_indices), FWD(data_points))
                                               | rv3::filter(match_id{cent_id})
@@ -330,11 +322,11 @@ struct k_means_result
 void print_kmn_result(auto&& opt_kmn_result)
 { 
   if(auto&& kmn_result = FWD(opt_kmn_result))
-    for(auto&& [centroid, satellites] : *FWD(kmn_result))    
+  { for(auto&& [centroid, satellites] : *FWD(kmn_result))    
     { print("Centroid: {}\n", FWD(centroid));    
       print("Satellites: {}\n\n", FWD(satellites));
     }
-  else
+  } else
     print("k_means call is invalid; returned std::nullopt.\n");
   
 }
@@ -343,12 +335,9 @@ template<typename IDX_R>
 using cluster_sizes_t =
 decltype(gen_cluster_sizes(declval<IDX_R>(), declval<size_type>()));
 
-template<typename PTS_R>
-using centroids_t = vector<centroid_type<PTS_R>>;
-
 template<typename PTS_R, typename IDX_R>
 using k_means_impl_t =
-k_means_result<centroids_t<PTS_R>,
+k_means_result<vector<centroid_t<PTS_R>>,
                cluster_sizes_t<IDX_R>, PTS_R, IDX_R>;
 
 template<typename PTS_R, typename IDX_R>
@@ -444,6 +433,5 @@ int main(){
     // k_means(int_arr_df, out_indices, k, n);
     print_kmn_result(k_means(int_arr_df, out_indices, k, n));
     //UNIT TEST: Ensure #satellites ==  #data_points
-
     return 0;
 }
