@@ -56,16 +56,6 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
 
 ## TODO
 - Decide if the checks for pt==centroid in `distance_from` are still necessary.
-- *sarah@#includecpp*: Output range of indices mapping each point to its cluster. (Provided as an overload)
-    - take an input range of data points, and an output range of indices
-    - create a vector of k means, and a vector of sizes of each cluster
-    - for each iteration, iterate over the two ranges, get the ID of the nearest centroid to each data point, and write it to the output range
-    - update the means, repeat until convergence
-    - return object `{vector of centroids, sbo_vector of cluster sizes, reference to input range, reference to output range}`
-    - What's gained:
-        - Allocation of a clusters range is offloaded as an opt-in to the user, as permitted by the returned information
-        - No imposing of an intrusive custom type (Cluster) for the output range on the user
-        - Facilitates unit testing on the output range
 - Write unit tests.
     - A given input (with fixed `n` and `k`) will have N reference outputs which the output of a given revision of the implementation has to compare against (i.e. references' mean or any one of them) within a tolerance.
         - The comparison would be done by euclidean distance between output ranges of indices.
