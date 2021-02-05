@@ -15,17 +15,6 @@
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
-template<typename ...Ts>
-[[deprecated]] constexpr bool print_type = true;
-
-template <typename... Ts> struct empty{};
-template <typename... Us, typename... Vs>
-[[deprecated]] auto show_types(Vs&&...) -> empty<Us..., Vs...>;
-
-//TODO: Merge this to main; Decide if you're keeping the old version as an overload
-//TODO: See what should be const here and const it if rnv allows it
-//TODO: Ask/Look into how to detect moves/copies for types I didn't write
-
 namespace kmn{
 
 using size_type = std::size_t;
@@ -240,8 +229,8 @@ void update_centroids(auto&& data_points,
     return sum / count;
   };
 
-  rn::transform(indexed_centroids | keys,
-                rn::begin( indexed_centroids | values),
+  rn::transform(keys(indexed_centroids),
+                rn::begin(values(indexed_centroids)),
                 [&](auto const& cent_id)
                 { return mean_matching_points(zip(FWD(out_indices), FWD(data_points))
                                               | r3v::filter(match_id{cent_id})
