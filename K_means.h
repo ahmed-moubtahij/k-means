@@ -12,9 +12,19 @@
 #include <range/v3/view/sample.hpp> //Used over std::ranges::sample for pipability/lazy semantics
 #include <range/v3/view/transform.hpp> //Used when std::ranges::views::transform breaks
 #include <fmt/ranges.h>
+
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
-using fmt::print;
+template<typename ...Ts>
+[[deprecated]] constexpr bool print_type = true;
+
+template <typename... Ts> struct empty{};
+template <typename... Us, typename... Vs>
+[[deprecated]] auto show_types(Vs&&...) -> empty<Us..., Vs...>;
+
+//TODO: Merge this to main; Decide if you're keeping the old version as an overload
+//TODO: See what should be const here and const it if rnv allows it
+//TODO: Ask/Look into how to detect moves/copies for types I didn't write
 
 namespace kmn{
 
@@ -184,7 +194,7 @@ auto init_centroids(PTS_R&& data_points, size_type k)
   auto const ids = rnv::iota(size_type{ 1 }, k + 1); 
   //Initialize centroids with a sample of K points from data_points
   if constexpr(std::floating_point<pt_value_t>)
-  { auto const centroids = data_points
+  { auto const centroids = FWD(data_points)
                            | sample(k)
                            | to<centroids_t>();
     return zip(ids, centroids) | to<indexed_centroids_t<PTS_R>>();
@@ -192,7 +202,7 @@ auto init_centroids(PTS_R&& data_points, size_type k)
   {      //centroids (which get updated with means) have floating point value types
          //So the sampled points' value types need to match
     auto constexpr pt_size = data_point_size_v< data_point_t<PTS_R> >;
-    auto const centroids = data_points
+    auto const centroids = FWD(data_points)
                            | r3v::transform( //std::ranges::views::transform breaks
                              [](DataPoint<pt_value_t, pt_size> const& pt)
                              { return static_cast<centroid_t<PTS_R>>(pt); })
@@ -318,6 +328,7 @@ struct k_means_result
 
 void print_kmn_result(auto&& opt_kmn_result)
 { 
+  using fmt::print;
   if(auto&& kmn_result = FWD(opt_kmn_result))
   { for(auto&& [centroid, satellites] : *FWD(kmn_result))    
     { print("Centroid: {}\n", FWD(centroid));    
@@ -325,7 +336,6 @@ void print_kmn_result(auto&& opt_kmn_result)
     }
   } else
     print("k_means call is invalid; returned std::nullopt.\n");
-  
 }
 
 template<typename IDX_R>
@@ -343,9 +353,6 @@ k_means_impl(PTS_R&& data_points, IDX_R&& out_indices,
              size_type k, size_type n)
 -> k_means_impl_t<PTS_R, IDX_R>
 { //Initialize centroids and their ids
-  //TODO: See if codegen is better if init_centroids becomes a functor (or just ask first)
-  //      index_points_by_centroids(FWD(out_indices), FWD(data_points),
-  //                                indexed_centroids | rnv::transform(init_centroids));
   auto&& indexed_centroids = init_centroids(FWD(data_points), k);
   index_points_by_centroids(FWD(out_indices), FWD(data_points), FWD(indexed_centroids));  
   //Update the centroids with means, repeat n times
@@ -354,10 +361,8 @@ k_means_impl(PTS_R&& data_points, IDX_R&& out_indices,
                      FWD(out_indices),
                      FWD(indexed_centroids));
   }
-  
-  auto&& centroids_rn = indexed_centroids | r3v::values;
-  
-  return { vector(r3::begin(centroids_rn), r3::end(centroids_rn)),
+  return { values(indexed_centroids)
+           | r3::to<vector<centroid_t<PTS_R>>>(),
            gen_cluster_sizes(FWD(out_indices), k),
            FWD(data_points), FWD(out_indices)
          };
