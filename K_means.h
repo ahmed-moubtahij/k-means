@@ -6,9 +6,10 @@
 #include <numeric>
 #include <optional>
 #include <ranges>
-#include <range/v3/view/zip.hpp>
-#include <range/v3/view/filter.hpp>
+#include <range/v3/view/zip.hpp> //std::ranges doesn't have zip
+#include <range/v3/view/filter.hpp> //std::ranges::views::filter has implementation bugs
 #include <range/v3/view/map.hpp> //ranges::views::{keys, values}
+#include <range/v3/range/conversion.hpp> //std::ranges doesn't have to(_container)
 #include <fmt/ranges.h>
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
@@ -20,17 +21,15 @@ using size_type = std::size_t;
 
 namespace rn = std::ranges;
 namespace rnv = rn::views;
-namespace r3 = ranges; //TODO: This should be rv3 as in "range v3" //used when std::ranges bugs
-namespace rv3 = r3::views; //TODO: This should be r3v
-
 using rn::range_value_t;
 using rnv::filter;
 using rnv::keys, rnv::values;
 
-using rv3::zip;
+namespace r3 = ranges; //used when std::ranges bugs
+namespace r3v = r3::views;
+using r3v::zip;
 
-using std::declval;
-using std::vector;
+using std::declval, std::vector;
 
 template<typename T>
 concept arithmetic = std::integral<T> or std::floating_point<T>;
@@ -169,40 +168,37 @@ select_centroid_t<point_value_t<PTS_R>,
                   data_point_size_v<data_point_t<PTS_R>>>;
 
 template<typename PTS_R>
+using indexed_centroids_t =
+vector<std::pair<size_type, centroid_t<PTS_R>>>;
+
+template<typename PTS_R>
 auto init_centroids(PTS_R&& data_points, size_type k)
--> vector<std::pair<size_type, centroid_t<PTS_R>>>
+-> indexed_centroids_t<PTS_R>
 {
   using PT_VALUE_T = point_value_t<PTS_R>;
-  
-  //TODO: reserve-init these and have rn::sample write to a back inserter
-  vector<size_type> ids(k);
-  vector<centroid_t<PTS_R>> centroids(k);
-  auto indexed_centroids = zip(ids, centroids);
-  
   //Initialize centroid ids
-  //TODO: Look into indexed_centroids | rv3::keys = rnv::iota(1, k + 1)
-  rn::generate(indexed_centroids | rnv::keys,
-               [n = 1]() mutable { return n++; });
-
+  auto const ids = rnv::iota(size_type{ 1 }, k + 1)
+                   | r3::to<vector<size_type>>();
   //Initialize centroids with a sample of K points from data_points
-  if constexpr(std::floating_point<PT_VALUE_T>){
-      rn::sample(FWD(data_points),
-                 rn::begin(indexed_centroids | values),
-                 k, std::mt19937{std::random_device{}()});
-  } else {
-      //data_points here has integral value types T
-      //T needs to be a floating point type to match centroids' T
-      //because centroids get updated with data_points' means
-      //and a mean's result is a floating point type
-      auto constexpr DIM = data_point_size_v< data_point_t<PTS_R> >;
-      rn::sample(FWD(data_points)
-                 | rnv::transform(
-                   [](DataPoint<PT_VALUE_T, DIM> const& pt)
-                   { return static_cast<DataPoint<double, DIM>>(pt); }),
-                 rn::begin(indexed_centroids | values),
-                 k, std::mt19937{std::random_device{}()});
+  vector<centroid_t<PTS_R>> centroids; centroids.reserve(k);
+  
+  if constexpr(std::floating_point<PT_VALUE_T>)
+  { rn::sample(FWD(data_points),
+               std::back_inserter(centroids),
+               k, std::mt19937{std::random_device{}()});
+  } else //data_points here has integral value types T
+  {      //T needs to be a floating point type to match centroids' T
+         //because centroids get updated with data_points' means
+         //and a mean's result is a floating point type
+    auto constexpr DIM = data_point_size_v< data_point_t<PTS_R> >;
+    rn::sample(data_points
+               | rnv::transform([](DataPoint<PT_VALUE_T, DIM> const& pt)
+                 { return static_cast<DataPoint<double, DIM>>(pt); })
+               | r3::to<decltype(centroids)>(),
+               std::back_inserter(centroids),
+               k, std::mt19937{std::random_device{}()});
   }
-  return { rn::begin(indexed_centroids), rn::end(indexed_centroids) };
+    return zip(ids, centroids) | r3::to<indexed_centroids_t<PTS_R>>();
 }
 
 //match_id: Used in update_centroids and in k_means_result
@@ -237,8 +233,8 @@ void update_centroids(auto&& data_points,
                 rn::begin( indexed_centroids | values),
                 [&](auto const& cent_id)
                 { return mean_matching_points(zip(FWD(out_indices), FWD(data_points))
-                                              | rv3::filter(match_id{cent_id})
-                                              | rv3::values);
+                                              | r3v::filter(match_id{cent_id})
+                                              | r3v::values);
                 });
 }
 
@@ -288,11 +284,11 @@ struct k_means_result
   
   using filtered_indexed_range =
   decltype(declval<indexed_range>() 
-           | rv3::filter(match_id{}));
+           | r3v::filter(match_id{}));
   
   using filtered_range =
   decltype(declval<filtered_indexed_range>()
-           | rv3::values);
+           | r3v::values);
   
   struct iterator
   { k_means_result& parent;
@@ -304,8 +300,8 @@ struct k_means_result
     auto operator*() -> cluster
     { return { parent.centroids[cluster_idx],
                zip(FWD(parent.out_indices), FWD(parent.points))
-               | rv3::filter(match_id{ cluster_idx + 1 })
-               | rv3::values
+               | r3v::filter(match_id{ cluster_idx + 1 })
+               | r3v::values
              };
     }
     
@@ -358,7 +354,7 @@ k_means_impl(PTS_R&& data_points, IDX_R&& out_indices,
                      FWD(indexed_centroids));
   }
   
-  auto&& centroids_rn = indexed_centroids | rv3::values;
+  auto&& centroids_rn = indexed_centroids | r3v::values;
   
   return { vector(r3::begin(centroids_rn), r3::end(centroids_rn)),
            gen_cluster_sizes(FWD(out_indices), k),
