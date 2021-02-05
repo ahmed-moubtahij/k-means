@@ -2,7 +2,6 @@
 #include <array>
 #include <vector>
 #include <algorithm>
-#include <random>
 #include <numeric>
 #include <optional>
 #include <ranges>
@@ -10,6 +9,8 @@
 #include <range/v3/view/filter.hpp> //std::ranges::views::filter has implementation bugs
 #include <range/v3/view/map.hpp> //ranges::views::{keys, values}
 #include <range/v3/range/conversion.hpp> //std::ranges doesn't have to(_container)
+#include <range/v3/view/sample.hpp> //Used over std::ranges::sample for pipability/lazy semantics
+#include <range/v3/view/transform.hpp> //Used when std::ranges::views::transform breaks
 #include <fmt/ranges.h>
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
@@ -175,30 +176,30 @@ template<typename PTS_R>
 auto init_centroids(PTS_R&& data_points, size_type k)
 -> indexed_centroids_t<PTS_R>
 {
-  using PT_VALUE_T = point_value_t<PTS_R>;
+  using pt_value_t = point_value_t<PTS_R>;
+  using r3v::sample, r3::to;
+  using centroids_t =
+  vector<typename indexed_centroids_t<PTS_R>::value_type::second_type>;
   //Initialize centroid ids
-  auto const ids = rnv::iota(size_type{ 1 }, k + 1)
-                   | r3::to<vector<size_type>>();
+  auto const ids = rnv::iota(size_type{ 1 }, k + 1); 
   //Initialize centroids with a sample of K points from data_points
-  vector<centroid_t<PTS_R>> centroids; centroids.reserve(k);
-  
-  if constexpr(std::floating_point<PT_VALUE_T>)
-  { rn::sample(FWD(data_points),
-               std::back_inserter(centroids),
-               k, std::mt19937{std::random_device{}()});
-  } else //data_points here has integral value types T
-  {      //T needs to be a floating point type to match centroids' T
-         //because centroids get updated with data_points' means
-         //and a mean's result is a floating point type
-    auto constexpr DIM = data_point_size_v< data_point_t<PTS_R> >;
-    rn::sample(data_points
-               | rnv::transform([](DataPoint<PT_VALUE_T, DIM> const& pt)
-                 { return static_cast<DataPoint<double, DIM>>(pt); })
-               | r3::to<decltype(centroids)>(),
-               std::back_inserter(centroids),
-               k, std::mt19937{std::random_device{}()});
+  if constexpr(std::floating_point<pt_value_t>)
+  { auto const centroids = data_points
+                           | sample(k)
+                           | to<centroids_t>();
+    return zip(ids, centroids) | to<indexed_centroids_t<PTS_R>>();
+  } else //data_points here has integral value types 'T'
+  {      //centroids (which get updated with means) have floating point value types
+         //So the sampled points' value types need to match
+    auto constexpr pt_size = data_point_size_v< data_point_t<PTS_R> >;
+    auto const centroids = data_points
+                           | r3v::transform( //std::ranges::views::transform breaks
+                             [](DataPoint<pt_value_t, pt_size> const& pt)
+                             { return static_cast<centroid_t<PTS_R>>(pt); })
+                           | sample(k)
+                           | to<centroids_t>();
+    return zip(ids, centroids) | to<indexed_centroids_t<PTS_R>>();
   }
-    return zip(ids, centroids) | r3::to<indexed_centroids_t<PTS_R>>();
 }
 
 //match_id: Used in update_centroids and in k_means_result
