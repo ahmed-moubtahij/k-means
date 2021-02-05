@@ -69,4 +69,4 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
 - Parallelizing.
 
 ## Thanks
-My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: sarah, Léo, marcorubini, oktal and Lesley Lai.
+My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: sarah, Léo, marcorubini, oktal, Lesley Lai and ninjawedding.
