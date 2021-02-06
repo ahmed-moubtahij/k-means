@@ -7,7 +7,7 @@
 #include <ranges>
 #include <range/v3/view/zip.hpp> //std::ranges doesn't have zip
 #include <range/v3/view/filter.hpp> //std::ranges::views::filter has implementation bugs
-#include <range/v3/view/map.hpp> //ranges::views::{keys, values}
+#include <range/v3/view/map.hpp> //ranges::views::{keys, values} (std's have implementation bugs)
 #include <range/v3/range/conversion.hpp> //std::ranges doesn't have to(_container)
 #include <range/v3/view/sample.hpp> //Used over std::ranges::sample for pipability/lazy semantics
 #include <range/v3/view/transform.hpp> //Used when std::ranges::views::transform breaks
@@ -21,14 +21,13 @@ using size_type = std::size_t;
 
 namespace rn = std::ranges;
 namespace rnv = rn::views;
+namespace r3 = ranges; //used when std::ranges bugs
+namespace r3v = r3::views;
+
 using rn::range_value_t;
 using rnv::filter;
 using rnv::keys, rnv::values;
-
-namespace r3 = ranges; //used when std::ranges bugs
-namespace r3v = r3::views;
 using r3v::zip;
-
 using std::declval, std::vector;
 
 template<typename T>
@@ -69,7 +68,7 @@ namespace hlpr
   /************************** point_value_t ******************************/
   template<typename R>
   using point_value_t = data_point_t<R>::value_type;
-  /***************************** CONCEPTS ********************************/
+  /***************************** Concepts ********************************/
   template<typename R>
   concept data_points_range = is_data_point_v<range_value_t<R>>;
   template<typename R>
@@ -228,7 +227,6 @@ void update_centroids(auto&& data_points,
                                  data_point_t(), counted_sum);
     return sum / count;
   };
-
   rn::transform(keys(indexed_centroids),
                 rn::begin(values(indexed_centroids)),
                 [&](auto const& cent_id)
@@ -319,7 +317,8 @@ void print_kmn_result(auto&& opt_kmn_result)
 { 
   using fmt::print;
   if(auto&& kmn_result = FWD(opt_kmn_result))
-  { for(auto&& [centroid, satellites] : *FWD(kmn_result))    
+  { 
+    for(auto&& [centroid, satellites] : *FWD(kmn_result))    
     { print("Centroid: {}\n", FWD(centroid));    
       print("Satellites: {}\n\n", FWD(satellites));
     }
@@ -360,10 +359,10 @@ k_means_impl(PTS_R&& data_points, IDX_R&& out_indices,
 struct k_means_fn
 { template<data_points_range PTS_R, unsigned_range IDX_R>
   constexpr auto operator()
-  (PTS_R&& data_points, //not mutated but a reference to it is returned;
-                        //&& for referring or moving depending on value category
-   IDX_R&& out_indices, //is an rvalue reference to handle rvalue arguments
-                        //such as views-like objects
+  (PTS_R&& data_points, //Not mutated but a reference to it is returned;
+                        //Will be moved if it's an rvalue so as to not return a dangling reference
+   IDX_R&& out_indices, //Is an rvalue reference instead of lvalue reference
+                        //to handle rvalue arguments such as views-like objects
    size_type k, size_type n) const noexcept
   -> std::optional<k_means_impl_t<PTS_R, IDX_R>>
   { 
@@ -390,9 +389,9 @@ int main(){
     //INPUT ranges
     auto const int_arr_df =
     array{DataPoint(1, 2, 3),    DataPoint(4, 5, 6),    DataPoint(7, 8, 9),
-          DataPoint(10, 11, 12), DataPoint(13, 14, 15), DataPoint(16, 17, 18),
-          DataPoint(19, 20, 21), DataPoint(22, 23, 24), DataPoint(25, 26, 27),
           DataPoint(28, 29, 30), DataPoint(31, 32, 33), DataPoint(34, 35, 36),
+          DataPoint(19, 20, 21), DataPoint(22, 23, 24), DataPoint(25, 26, 27),
+          DataPoint(10, 11, 12), DataPoint(13, 14, 15), DataPoint(16, 17, 18),
           DataPoint(37, 38, 39), DataPoint(40, 41, 42), DataPoint(43, 44, 45)};
     
     auto const double_arr_df =
@@ -418,11 +417,13 @@ int main(){
 
     //OUTPUT range
     vector<std::size_t> out_indices(int_arr_df.size());
-    
     //CALL & DISPLAY RESULT
     std::size_t const k{ 4 }, n{ 10 };
     // k_means(int_arr_df, out_indices, k, n);
-    print_kmn_result(k_means(int_arr_df, out_indices, k, n));
+    auto kmn_result = k_means(int_arr_df, out_indices, k, n);
+    fmt::print("Cluster indices for each point:\n {}\n\n", out_indices);
+    fmt::print("Points partitionned into clusters:\n\n");
+    print_kmn_result(kmn_result);
     //UNIT TEST: Ensure #satellites ==  #data_points
     return 0;
 }
