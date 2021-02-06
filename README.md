@@ -57,7 +57,6 @@ A call to `k_means` returns a `std::optional` object with potentially useful inf
 A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an arithmetic type and `D` the point's dimensionality. `T` and `D` can be implicit through CTAD as shown in the above example. All data points must naturally have the same dimensionality.
 
 ## TODO
-- Decide if the checks for pt==centroid in `distance_from` are still necessary.
 - Write unit tests.
     - A given input (with fixed `n` and `k`) will have N reference outputs which the output of a given revision of the implementation has to compare against (i.e. references' mean or any one of them) within a tolerance.
         - The comparison would be done by euclidean distance between output ranges of indices.
