@@ -61,8 +61,11 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
     - A given input (with fixed `n` and `k`) will have N reference outputs which the output of a given revision of the implementation has to compare against (i.e. references' mean or any one of them) within a tolerance.
         - The comparison would be done by euclidean distance between output ranges of indices.
     - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
+- See what should be `const` here and `const` it if `(std::)ranges::views` allows it.
+- Look into sbo for the returned vectors
+- Look into how to detect moves/copies of types (including library types)
+- Make sure these are used as they should be: move semantics, RVO, in-place construction...etc.
 - Convergence criteria instead of `n` iterations.
-- Lookup opportunities for `std::move`, in-place construction...etc.
 - Provide an interface for file input.
 - *dicroce@Reddit*: Write `auto_k_means`; start with K=1, iteratively employ k-means with greater K's until adding a new centroid implies most of the satellites assigned to it came from an existing cluster.
 - Parallelizing.
