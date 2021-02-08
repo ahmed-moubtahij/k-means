@@ -21,7 +21,7 @@ using size_type = std::size_t;
 
 namespace rn = std::ranges;
 namespace rnv = rn::views;
-namespace r3 = ranges; //used when std::ranges bugs
+namespace r3 = ranges;
 namespace r3v = r3::views;
 
 using rn::range_value_t;
@@ -211,7 +211,8 @@ struct match_id
 void update_centroids(auto&& data_points,
                       auto&& out_indices,
                       auto&& indexed_centroids)
-{ auto constexpr mean_matching_points =
+{
+  auto constexpr mean_matching_points =
   [](auto&& data_points)
   { using data_point_t = range_value_t<decltype(data_points)>;
     size_type count{};
