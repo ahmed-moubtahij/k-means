@@ -367,14 +367,13 @@ struct k_means_fn
   -> std::optional<k_means_impl_t<PTS_R, IDX_R>>
   { 
     if(k < 2) return std::nullopt;
-
-    if(auto const pts_size =
-       //difference_type is cast to an unsigned type for comparison with k & size(out_indices).
-       //The cast is safe because distance(data_points) is always positive
-       //distance() is used instead of size() to support non-sized range arguments
-       //such as "data_points_arg | filter(...)"
-       static_cast<size_type>(rn::distance(data_points));
-       pts_size < k or pts_size != rn::size(out_indices))
+    //distance() is used instead of size() to support non-sized range arguments
+    //such as "data_points_arg | filter(...)"
+    if(auto const pts_dist = rn::distance(data_points);
+       not std::in_range<size_type>(pts_dist))
+    { return std::nullopt; } //Fall if distance(data_points) is signed
+    else if(auto const pts_size = static_cast<size_type>(pts_dist);
+            pts_size < k or pts_size != rn::size(out_indices))
     { return std::nullopt; }
     
     return { k_means_impl< PTS_R, IDX_R >
