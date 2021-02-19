@@ -19,14 +19,15 @@ namespace kmn{
 
 using size_type = std::size_t;
 
-namespace rn = std::ranges;
-namespace rnv = rn::views;
+namespace stdr = std::ranges;
+namespace stdv = std::views;
 namespace r3 = ranges;
 namespace r3v = r3::views;
 
-using rn::range_value_t;
-using rnv::filter;
-using rnv::keys, rnv::values;
+using stdr::range_value_t;
+using stdr::transform;
+using stdv::filter;
+using stdv::keys, stdv::values;
 using r3v::zip;
 using std::declval, std::vector;
 
@@ -98,7 +99,7 @@ struct DataPoint final : private std::array<T, D> {
     
     constexpr auto operator+(DataPoint const& rhs) const
     { DataPoint res;
-      rn::transform(rhs, *this, res.begin(), std::plus{});
+      transform(rhs, *this, res.begin(), std::plus{});
       return res;
     }
 
@@ -106,26 +107,24 @@ struct DataPoint final : private std::array<T, D> {
     constexpr auto operator/(arithmetic auto n) const
         requires (std::floating_point<value_type>)
     { DataPoint<value_type, D> res;
-      rn::transform(*this, res.begin(),
-      [&n](value_type e){ return e / static_cast<value_type>(n); });
+      transform(*this, res.begin(), [n](value_type e)
+                { return e / static_cast<value_type>(n); });
       return res;
     }
 
     //operator/ overload for integer T => result's value type = double
     constexpr auto operator/(arithmetic auto n) const
     { DataPoint<double, D> res;
-      rn::transform(*this, res.begin(),
-                    [&n](value_type e)
-                    { return e / static_cast<double>(n); });
+      transform(*this, res.begin(), [n](value_type e)
+                { return e / static_cast<double>(n); });
       return res;
     }
 
     template<std::floating_point U>
     constexpr explicit operator DataPoint<U, D>() const
     { DataPoint<double, D> res;
-      rn::transform(*this, res.begin(),
-                    [](value_type num)
-                    { return static_cast<U>(num); });
+      transform(*this, res.begin(), [](value_type num)
+               { return static_cast<U>(num); });
       return res;
     }
 };
@@ -138,10 +137,10 @@ template<typename T1, typename T2, size_type D>
 constexpr auto
 sqr_distance(DataPoint<T1,D> const& dp1,
              DataPoint<T2,D> const& dp2)
-{    return std::transform_reduce(
-            dp1.cbegin(), dp1.cend(), dp2.cbegin(), 0,
-            [](T1 a, T2 b){ return a + b; },
-            [](T1 a, T2 b){ return (a - b)*(a - b); });
+{ return std::transform_reduce(
+         dp1.cbegin(), dp1.cend(), dp2.cbegin(), 0,
+         [](T1 a, T2 b){ return a + b; },
+         [](T1 a, T2 b){ return (a - b)*(a - b); });
 };
 //distance_from: Function Object Comparator
 //               of distances from two points to a reference point
@@ -179,7 +178,7 @@ auto init_centroids(PTS_R&& data_points, size_type k)
   using centroids_t =
   vector<typename indexed_centroids_t<PTS_R>::value_type::second_type>;
   //Initialize centroid ids
-  auto const ids = rnv::iota(size_type{ 1 }, k + 1); 
+  auto const ids = stdv::iota(size_type{ 1 }, k + 1); 
   //Initialize centroids with a sample of K points from data_points
   if constexpr(std::floating_point<pt_value_t>)
   { auto const centroids = FWD(data_points)
@@ -222,18 +221,19 @@ void update_centroids(auto&& data_points,
     { ++count; return pt1 + pt2; };
     //count is a side effect of counted_sum,
     //so sum must be calculated separately
-    auto const sum = std::reduce(rn::begin(data_points),
-                                 rn::end(data_points),
+    auto const sum = std::reduce(stdr::begin(data_points),
+                                 stdr::end(data_points),
                                  data_point_t(), counted_sum);
     return sum / count;
   };
-  rn::transform(keys(indexed_centroids),
-                rn::begin(values(indexed_centroids)),
-                [&](auto const& cent_id)
-                { return mean_matching_points(zip(FWD(out_indices), FWD(data_points))
-                                              | r3v::filter(match_id{cent_id})
-                                              | r3v::values);
-                });
+
+  transform(keys(indexed_centroids),
+            stdr::begin(values(indexed_centroids)),
+            [&](auto const& cent_id)
+            { return mean_matching_points(zip(FWD(out_indices), FWD(data_points))
+                                          | r3v::filter(match_id{cent_id})
+                                          | r3v::values);
+            });
 }
 
 void index_points_by_centroids(auto&& out_indices,
@@ -247,26 +247,26 @@ void index_points_by_centroids(auto&& out_indices,
 
     auto const find_id_nearest_centroid =
     [&](auto const& pt) 
-    { //rn::borrowed_iterator has no operator->
-      return (*rn::min_element(indexed_centroids,
-                               dist_from_centroid(pt),
-                               proj_centroid)).first;
+    { //stdr::borrowed_iterator has no operator->
+      return (*stdr::min_element(indexed_centroids,
+                                 dist_from_centroid(pt),
+                                 proj_centroid)).first;
     };
     //Find the ID of the nearest centroid to each data point,
     //and write it to the output range
-    rn::transform(FWD(data_points),
-                  std::begin(FWD(out_indices)),
-                  find_id_nearest_centroid);
+    transform(FWD(data_points),
+              std::begin(FWD(out_indices)),
+              find_id_nearest_centroid);
 }
 
 auto gen_cluster_sizes(auto const& out_indices, size_type k)
 {   
   auto const count_indices =
   [&out_indices](size_type index)
-  { return rn::count(out_indices, index); };
+  { return stdr::count(out_indices, index); };
   
-  return rnv::iota(std::size_t{ 1 }, k + 1)
-         | rnv::transform(count_indices);
+  return stdv::iota(std::size_t{ 1 }, k + 1)
+         | stdv::transform(count_indices);
 }
 
 template <typename CENTROIDS_R, typename SIZES_R,
@@ -369,11 +369,11 @@ struct k_means_fn
     if(k < 2) return std::nullopt;
     //distance() is used instead of size() to support non-sized range arguments
     //such as "data_points_arg | filter(...)"
-    if(auto const pts_dist = rn::distance(data_points);
+    if(auto const pts_dist = stdr::distance(data_points);
        not std::in_range<size_type>(pts_dist))
     { return std::nullopt; } //Fall if distance(data_points) is signed
     else if(auto const pts_size = static_cast<size_type>(pts_dist);
-            pts_size < k or pts_size != rn::size(out_indices))
+            pts_size < k or pts_size != stdr::size(out_indices))
     { return std::nullopt; }
     
     return { k_means_impl< PTS_R, IDX_R >
