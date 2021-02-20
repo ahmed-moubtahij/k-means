@@ -27,9 +27,11 @@ namespace r3v = r3::views;
 using stdr::range_value_t;
 using stdr::transform;
 using stdv::filter;
-using stdv::keys, stdv::values;
+
 using r3v::zip;
-using std::declval, std::vector;
+
+using std::declval;
+using std::vector;
 
 template<typename T>
 concept arithmetic = std::integral<T> or std::floating_point<T>;
@@ -362,7 +364,7 @@ k_means_impl(PTS_R&& data_points, IDX_R&& out_indices,
                      FWD(out_indices),
                      FWD(indexed_centroids));
   }
-  return { values(indexed_centroids)
+  return { r3v::values(indexed_centroids)
            | r3::to<vector<centroid_t<PTS_R>>>(),
            gen_cluster_sizes(FWD(out_indices), k),
            FWD(data_points), FWD(out_indices)
