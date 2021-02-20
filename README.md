@@ -63,7 +63,7 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
     - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
 - Subject all following steps to TDD.
 - See what should be `const` here and `const` it if `(std::)ranges::views` allows it.
-- Look into sbo for the returned vectors
+- Look into sbo for the returned vectors.
 - Look into how to detect moves/copies of types (including library types)
 - Make sure these are used as they should be: move semantics, RVO, in-place construction, explicit ctors...etc.
 - Convergence criteria instead of `n` iterations.
