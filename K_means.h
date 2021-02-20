@@ -153,7 +153,7 @@ sqr_distance(DataPoint<T1,D> const& dp1,
          dp1.cbegin(), dp1.cend(), dp2.cbegin(), 0,
          [](T1 a, T2 b){ return a + b; },
          [](T1 a, T2 b){ return (a - b)*(a - b); });
-};
+}
 //distance_from: Function Object Comparator
 //               of distances from two points to a reference point
 template<typename T, size_type D>
@@ -217,7 +217,7 @@ struct match_id
 { size_type cent_id;
   constexpr bool operator()
   (auto const& indexed_point) const
-  { return cent_id == get<0>(indexed_point); }
+  { return cent_id == std::get<0>(indexed_point); }
 };
 
 void update_centroids(auto&& data_points,
@@ -240,8 +240,8 @@ void update_centroids(auto&& data_points,
     return sum / count;
   };
 
-  transform(keys(indexed_centroids),
-            stdr::begin(values(indexed_centroids)),
+  transform(r3v::keys(indexed_centroids),
+            r3::begin(r3v::values(indexed_centroids)),
             [&](auto const& cent_id)
             { return mean_matching_points(zip(FWD(out_indices), FWD(data_points))
                                           | r3v::filter(match_id{cent_id})
