@@ -21,7 +21,7 @@ using size_type = std::size_t;
 
 namespace stdr = std::ranges;
 namespace stdv = std::views;
-namespace r3 = ranges;
+namespace r3 = ranges; //range-v3
 namespace r3v = r3::views;
 
 using stdr::range_value_t;
@@ -97,14 +97,23 @@ struct DataPoint final : private std::array<T, D> {
     
     friend constexpr bool operator<=>(DataPoint const&, DataPoint const&) = default;
     
-    constexpr auto operator+(DataPoint const& rhs) const
+    //operator+ is a hidden friend because:
+    //f(a, b) considers implicit conversion for a and b
+    //whereas a.f(b) only considers it for b
+    //meaning "a + b" and "b + a" might have different behavior
+    //Hidden -i.e. only found through ADL- friends are preferred for symmetric operations
+    friend constexpr auto
+    operator+(DataPoint const& lhs, DataPoint const& rhs)
+    -> DataPoint
     { DataPoint res;
-      transform(rhs, *this, res.begin(), std::plus{});
+      transform(lhs, rhs, res.begin(), std::plus{});
       return res;
     }
 
     //operator/ overload for floating point value type; result's value type matches it
-    constexpr auto operator/(arithmetic auto n) const
+    constexpr auto
+    operator/(arithmetic auto n) const
+    -> DataPoint<value_type, D>
         requires (std::floating_point<value_type>)
     { DataPoint<value_type, D> res;
       transform(*this, res.begin(), [n](value_type e)
@@ -113,7 +122,9 @@ struct DataPoint final : private std::array<T, D> {
     }
 
     //operator/ overload for integer T => result's value type = double
-    constexpr auto operator/(arithmetic auto n) const
+    constexpr auto
+    operator/(arithmetic auto n) const
+    -> DataPoint<double, D>
     { DataPoint<double, D> res;
       transform(*this, res.begin(), [n](value_type e)
                 { return e / static_cast<double>(n); });
@@ -121,7 +132,8 @@ struct DataPoint final : private std::array<T, D> {
     }
 
     template<std::floating_point U>
-    constexpr explicit operator DataPoint<U, D>() const
+    constexpr explicit
+    operator DataPoint<U, D>() const
     { DataPoint<double, D> res;
       transform(*this, res.begin(), [](value_type num)
                { return static_cast<U>(num); });
@@ -190,12 +202,13 @@ auto init_centroids(PTS_R&& data_points, size_type k)
          //So the sampled points' value types need to match
     auto constexpr pt_size = data_point_size_v< data_point_t<PTS_R> >;
     auto const centroids = FWD(data_points)
-                           | r3v::transform( //std::ranges::views::transform breaks
+                           | r3v::transform(
                              [](DataPoint<pt_value_t, pt_size> const& pt)
                              { return static_cast<centroid_t<PTS_R>>(pt); })
                            | sample(k)
                            | to<centroids_t>();
-    return zip(ids, centroids) | to<indexed_centroids_t<PTS_R>>();
+    return zip(ids, centroids)
+           | to<indexed_centroids_t<PTS_R>>();
   }
 }
 
