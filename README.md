@@ -65,11 +65,12 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
 - See what should be `const` here and `const` it if `(std::)ranges::views` allows it.
 - Look into sbo for the returned vectors
 - Look into how to detect moves/copies of types (including library types)
-- Make sure these are used as they should be: move semantics, RVO, in-place construction...etc.
+- Make sure these are used as they should be: move semantics, RVO, in-place construction, explicit ctors...etc.
 - Convergence criteria instead of `n` iterations.
 - Provide an interface for file input.
 - *dicroce@Reddit*: Write `auto_k_means`; start with K=1, iteratively employ k-means with greater K's until adding a new centroid implies most of the satellites assigned to it came from an existing cluster.
-- Parallelizing.
+- Parallelizing
+- Look into `#include <immintrin.h>` compiler intrinsics
 
 ## Thanks
 My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: sarah, Léo, marcorubini, oktal, Lesley Lai and ninjawedding.
