@@ -2,7 +2,7 @@
 #### Infographic made by [spiyer99](https://github.com/spiyer99)
 ## Requirements
 - **-std=c++20**
-- **> gcc 10.2**
+- **> gcc 10.2 (gcc trunk)**
     - `msvc` hasn't implemented `std::ranges` yet and `clang`'s `std::ranges`/`concepts` seem to be yet incomplete.
 - External dependencies: `range-v3` and `fmtlib` (optional for output display).
 
