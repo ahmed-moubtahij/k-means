@@ -1,3 +1,6 @@
 .vs/
 out/
+vcpkg/
 K_means.hpp.gch
+CMakeLists.txt
+vcpkg.json
