@@ -1,2 +1,0 @@
-C:/Users/MoubA/OneDrive/Bureau/K_means_Cpp20/k_means/out/build/x64-Debug/CMakeFiles/edit_cache.dir
-C:/Users/MoubA/OneDrive/Bureau/K_means_Cpp20/k_means/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir
