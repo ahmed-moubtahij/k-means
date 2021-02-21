@@ -1,3 +1,7 @@
 .vs/
 out/
 K_means.hpp.gch
+vcpkg/.git
+vcpkg/.github
+vcpkg/.gitignore
+vcpkg/.gitattributes
