@@ -10,6 +10,7 @@
 At the time of writing this, I'm an undergrad in Systems Engineering, and this is intended as a practice project that ideally evolves into something useful.
 
 ## Demo
+See: https://godbolt.org/z/nxMhbj (may not be up to date with the most recent code).
 ```cpp
 using fmt::print, std::array, kmn::DataPoint;
 using kmn::print_clusters, kmn::k_means;
