@@ -27,11 +27,9 @@ namespace r3v = r3::views;
 using stdr::range_value_t;
 using stdr::transform;
 using stdv::filter;
-
+using stdv::keys, stdv::values;
 using r3v::zip;
-
-using std::declval;
-using std::vector;
+using std::declval, std::vector;
 
 template<typename T>
 concept arithmetic = std::integral<T> or std::floating_point<T>;
@@ -155,7 +153,7 @@ sqr_distance(DataPoint<T1,D> const& dp1,
          dp1.cbegin(), dp1.cend(), dp2.cbegin(), 0,
          [](T1 a, T2 b){ return a + b; },
          [](T1 a, T2 b){ return (a - b)*(a - b); });
-}
+};
 //distance_from: Function Object Comparator
 //               of distances from two points to a reference point
 template<typename T, size_type D>
@@ -165,7 +163,7 @@ struct distance_from
     
   distance_from() = delete;
   distance_from& operator=(distance_from const&) = delete;
-  constexpr distance_from(target_point_t const& pt) : m_pt{pt} {}
+  constexpr distance_from(target_point_t const& pt) : m_pt{ pt } {}
   
   template<typename U>
   constexpr auto operator()
@@ -189,8 +187,9 @@ auto init_centroids(PTS_R&& data_points, size_type k)
 {
   using pt_value_t = point_value_t<PTS_R>;
   using r3v::sample, r3::to;
+  using id_centroids_t = indexed_centroids_t<PTS_R>;
   using centroids_t =
-  vector<typename indexed_centroids_t<PTS_R>::value_type::second_type>;
+  vector<typename id_centroids_t::value_type::second_type>;
   //Initialize centroid ids
   auto const ids = stdv::iota(size_type{ 1 }, k + 1); 
   //Initialize centroids with a sample of K points from data_points
@@ -198,7 +197,8 @@ auto init_centroids(PTS_R&& data_points, size_type k)
   { auto const centroids = FWD(data_points)
                            | sample(k)
                            | to<centroids_t>();
-    return zip(ids, centroids) | to<indexed_centroids_t<PTS_R>>();
+    return zip(ids, centroids)
+           | to<id_centroids_t>();
   } else //data_points here has integral value types 'T'
   {      //centroids (which get updated with means) have floating point value types
          //So the sampled points' value types need to match
@@ -210,7 +210,7 @@ auto init_centroids(PTS_R&& data_points, size_type k)
                            | sample(k)
                            | to<centroids_t>();
     return zip(ids, centroids)
-           | to<indexed_centroids_t<PTS_R>>();
+           | to<id_centroids_t>();
   }
 }
 
@@ -219,7 +219,7 @@ struct match_id
 { size_type cent_id;
   constexpr bool operator()
   (auto const& indexed_point) const
-  { return cent_id == std::get<0>(indexed_point); }
+  { return cent_id == get<0>(indexed_point); }
 };
 
 void update_centroids(auto&& data_points,
@@ -242,8 +242,8 @@ void update_centroids(auto&& data_points,
     return sum / count;
   };
 
-  transform(r3v::keys(indexed_centroids),
-            r3::begin(r3v::values(indexed_centroids)),
+  transform(keys(indexed_centroids),
+            stdr::begin(values(indexed_centroids)),
             [&](auto const& cent_id)
             { return mean_matching_points(zip(FWD(out_indices), FWD(data_points))
                                           | r3v::filter(match_id{cent_id})
@@ -364,7 +364,7 @@ k_means_impl(PTS_R&& data_points, IDX_R&& out_indices,
                      FWD(out_indices),
                      FWD(indexed_centroids));
   }
-  return { r3v::values(indexed_centroids)
+  return { values(indexed_centroids)
            | r3::to<vector<centroid_t<PTS_R>>>(),
            gen_cluster_sizes(FWD(out_indices), k),
            FWD(data_points), FWD(out_indices)
