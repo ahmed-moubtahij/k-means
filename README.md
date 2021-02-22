@@ -64,7 +64,7 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
     - A given input (with fixed `n` and `k`) will have N reference outputs which the output of a given revision of the implementation has to compare against (i.e. references' mean or any one of them) within a tolerance.
         - The comparison would be done by euclidean distance between output ranges of indices.
     - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
-- Subject all following steps to TDD.
+- Subject further refactorings to TDD.
 - See what should be `const` and `const` it if the used `(std::)ranges::views` adaptors allow it.
 - Look into how to detect moves/copies of types (including library types)
 - Make sure these are used as they should be: move semantics, RVO, in-place construction, explicit ctors...etc.
