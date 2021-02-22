@@ -204,13 +204,18 @@ auto init_centroids(PTS_R&& data_points, size_type k)
   } else //data_points here has integral value types 'T'
   {      //centroids (which get updated with means) have floating point value types
          //So the sampled points' value types need to match
-    auto constexpr pt_size = data_point_size_v< data_point_t<PTS_R> >;
+    using data_pt_t =
+    DataPoint<pt_value_t, data_point_size_v< data_point_t<PTS_R> >>;
+
+    auto constexpr cast_to_cendroid_t =
+    [](data_pt_t const& pt)
+    { return static_cast<centroid_t<PTS_R>>(pt); };
+    
     auto const centroids = FWD(data_points)
-                           | r3v::transform(
-                             [](DataPoint<pt_value_t, pt_size> const& pt)
-                             { return static_cast<centroid_t<PTS_R>>(pt); })
+                           | r3v::transform(cast_to_cendroid_t)
                            | sample(k)
                            | to<centroids_t>();
+    
     return zip(ids, centroids)
            | to<id_centroids_t>();
   }
