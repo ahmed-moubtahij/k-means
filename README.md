@@ -1,5 +1,14 @@
 ![alt text](https://i.imgur.com/RBXzdQ8.png)
 #### Infographic made by [spiyer99](https://github.com/spiyer99)
+## Requirements
+- **-std=c++20**
+- **gcc 10.1**
+    - `msvc` hasn't implemented `std::ranges` yet and `clang`'s `std::ranges`/`concepts` seem to be yet incomplete.
+- External dependencies: `range-v3` and `fmtlib` (optional for output display).
+
+## Context
+At the time of writing this, I'm an undergrad in Systems Engineering, and this is intended as a practice project that ideally evolves into something useful.
+
 ## Demo
 See: https://godbolt.org/z/nxMhbj (may not be up to date with the most recent code).
 ```cpp
@@ -47,15 +56,6 @@ A call to `k_means(data_points_range, out_indices_range, k, n);` populates `out_
 A call to `k_means` returns a `std::optional` object with potentially useful information for the user: `{ vector of centroids, vector of cluster sizes, reference to input range, reference to output range }`. This object is iterable over cluster objects i.e. each iterated element returns a `{ centroid, satellites }` object.
 
 A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an arithmetic type and `D` the point's dimensionality. `T` and `D` can be implicit through CTAD as shown in the above example. All data points must naturally have the same dimensionality.
-
-## Requirements
-- **-std=c++20**
-- **gcc 10.1**
-    - `msvc` hasn't implemented `std::ranges` yet and `clang`'s `std::ranges`/`concepts` seem to be yet incomplete.
-- External dependencies: `range-v3` and `fmtlib` (optional for output display).
-
-## Context
-At the time of writing this, I'm an undergrad in Systems Engineering, and this is intended as a practice project that ideally evolves into something useful.
 
 ## TODO
 - Make a build system.
