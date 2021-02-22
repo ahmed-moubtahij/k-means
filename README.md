@@ -65,12 +65,13 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
         - The comparison would be done by euclidean distance between output ranges of indices.
     - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
 - Subject all following steps to TDD.
-- See what should be `const` here and `const` it if `(std::)ranges::views` allows it.
-- Look into sbo for the returned vectors.
+- See what should be `const` and `const` it if the used `(std::)ranges::views` adaptors allow it.
 - Look into how to detect moves/copies of types (including library types)
 - Make sure these are used as they should be: move semantics, RVO, in-place construction, explicit ctors...etc.
-- Convergence criteria instead of `n` iterations.
+- Look into sbo for the returned vectors.
+- Write a blog?
 - Provide an interface for file input.
+- Convergence criteria instead of `n` iterations.
 - *dicroce@Reddit*: Write `auto_k_means`; start with K=1, iteratively employ k-means with greater K's until adding a new centroid implies most of the satellites assigned to it came from an existing cluster.
 - Parallelizing
 - Look into `#include <immintrin.h>` compiler intrinsics
