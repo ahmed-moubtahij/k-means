@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <concepts>
 
+namespace kmn{
+
 template<typename T>
 concept arithmetic = std::integral<T> or std::floating_point<T>;
 
@@ -16,7 +18,7 @@ struct DataPoint final : private std::array<T, D> {
     using std::array<T, D>::operator[];
     using std::array<T, D>::size;
 
-    using std::ranges::transform;
+    static constexpr auto transform = std::ranges::transform;
 
     constexpr DataPoint() noexcept = default;
     constexpr DataPoint(DataPoint const&) noexcept = default;
@@ -77,3 +79,5 @@ struct DataPoint final : private std::array<T, D> {
 //DataPoint deduction guide
 template<arithmetic T, typename... Us>
 DataPoint(T, Us...)->DataPoint<T, sizeof...(Us) + 1>;
+
+} //namespace kmn
