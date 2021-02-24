@@ -82,12 +82,13 @@ You may then run the provided example with `./K_means.exe` to ensure everything 
 - Look into how to detect moves/copies of types (including library types)
 - Make sure these are used as they should be: move semantics, RVO, in-place construction, `explicit` ctors, `noexcept`...etc.
 - Look into SBO for the returned vectors.
+- Measure compile & run performance.
 - Write a blog?
 - Provide an interface for file input.
 - Convergence criteria instead of `n` iterations.
 - *dicroce@Reddit*: Write `auto_k_means`; start with K=1, iteratively employ k-means with greater K's until adding a new centroid implies most of the satellites assigned to it came from an existing cluster.
-- Parallelizing
-- Look into `#include <immintrin.h>` compiler intrinsics
+- Concurrency.
+- Look into `#include <immintrin.h>` compiler intrinsics.
 
 ## Thanks
 My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: sarah, Léo, marcorubini, oktal, Lesley Lai and ninjawedding. Also Lorely for the CMake stuff.
