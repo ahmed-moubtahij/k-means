@@ -1,13 +1,5 @@
 ![alt text](https://i.imgur.com/RBXzdQ8.png)
 #### Infographic made by [spiyer99](https://github.com/spiyer99)
-## Requirements
-- **-std=c++20**
-- **gcc 10.1**
-    - `msvc` hasn't implemented `std::ranges` yet and `clang`'s `std::ranges`/`concepts` seem to be yet incomplete.
-- External dependencies: `range-v3` and `fmtlib` (optional for output display).
-
-## Context
-At the time of writing this, I'm an undergrad in Systems Engineering, and this is intended as a practice project that ideally evolves into something useful.
 
 ## Demo
 See: https://godbolt.org/z/PYadfj (may not be up to date with the most recent code).
@@ -57,9 +49,29 @@ A call to `k_means` returns a `std::optional` object with potentially useful inf
 
 A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an arithmetic type and `D` the point's dimensionality. `T` and `D` can be implicit through CTAD as shown in the above example. All data points must naturally have the same dimensionality.
 
+## Context
+At the time of writing this, I'm an undergrad in Systems Engineering, and this is intended as a practice project that ideally evolves into something useful.
+
+## How do I use this?
+
+**Requirements**
+- **-std=c++20**
+- **gcc 10.1**
+    - `msvc` hasn't implemented `std::ranges` yet and `clang`'s `std::ranges`/`concepts` seem to be yet incomplete.
+- External dependencies: `range-v3` and `fmtlib` (optional for output display).
+
+**Build Instructions**
+```
+    cd path/to/your/folder
+    git clone https://github.com/Ayenem/K_means.git --recursive
+    mkdir build
+    cd build
+    cmake ..
+    cmake --build .
+```
+You may then run the provided example with `./K_means.exe` to ensure everything works.
+
 ## TODO
-- Hoist `DataPoint` off to its own file and put it with `K_means.hpp` in an `include` folder.
-- Update `README` with a Build Instructions section.
 - Integrate vcpkg into build system.
 - Write unit tests.
     - A given input (with fixed `n` and `k`) will have N reference outputs which the output of a given revision of the implementation has to compare against (i.e. references' mean or any one of them) within a tolerance.
@@ -78,4 +90,4 @@ A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an 
 - Look into `#include <immintrin.h>` compiler intrinsics
 
 ## Thanks
-My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: sarah, Léo, marcorubini, oktal, Lesley Lai and ninjawedding.
+My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: sarah, Léo, marcorubini, oktal, Lesley Lai and ninjawedding. Also Lorely for the CMake stuff.
