@@ -4,7 +4,7 @@ project(K_means CXX)
 
 add_subdirectory(external)
 
-add_executable(${PROJECT_NAME} example.cpp)
+add_executable(${PROJECT_NAME} example.cpp "DataPoint.hpp")
 
 target_compile_features (${PROJECT_NAME} PRIVATE cxx_std_20)
 
