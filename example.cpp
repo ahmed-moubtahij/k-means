@@ -1,8 +1,9 @@
 #include "K_means.hpp"
 
 int main() {
-    using std::array, std::vector, kmn::DataPoint;
-    using kmn::print_kmn_result, kmn::k_means;
+    using std::array, std::vector;
+    using kmn::DataPoint, kmn::print_kmn_result, kmn::k_means;
+    using fmt::print;
 
     //INPUT ranges
     auto const int_arr_df =
@@ -39,6 +40,7 @@ int main() {
     std::size_t const k{ 4 }, n{ 10 };
     // k_means(int_arr_df, out_indices, k, n);
     auto kmn_result = k_means(int_arr_df, out_indices, k, n);
+    fmt::print("Input data points:\n{}\n\n", int_arr_df);
     fmt::print("Cluster indices for each point:\n {}\n\n", out_indices);
     fmt::print("Points partitionned into clusters:\n\n");
     print_kmn_result(kmn_result);
