@@ -5,7 +5,7 @@ set(
 	CACHE PATH "Path to vcpkg toolchain")
    )
 
-project(K_means CXX)
+project(k-means CXX)
 
 add_executable(${PROJECT_NAME} example.cpp "DataPoint.hpp")
 
