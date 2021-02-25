@@ -16,7 +16,7 @@ if(DEFINED VCPKG_ROOT)
 	endif()
 endif()
 
-project(K_means CXX)
+project(k-means CXX)
 
 add_subdirectory(external)
 
