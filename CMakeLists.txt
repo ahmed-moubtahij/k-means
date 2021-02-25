@@ -18,11 +18,7 @@ endif()
 
 project(k-means CXX)
 
-add_subdirectory(external)
-
 add_executable(${PROJECT_NAME} example.cpp "DataPoint.hpp")
-
-vcpkg_install_packages()
 
 find_package(fmt CONFIG REQUIRED)
 find_package(range-v3 CONFIG REQUIRED)
