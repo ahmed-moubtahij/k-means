@@ -65,12 +65,10 @@ At the time of writing this, I'm an undergrad in Systems Engineering, and this i
     cd path/to/your/folder
     git clone https://github.com/Ayenem/K_means.git --recursive
     cd k-means
-    mkdir build
-    cd build
-    cmake ..
-    cmake --build .
+    cmake -B build
+    cmake --build build
 ```
-You may then run the provided example with `./K_means.exe` to ensure everything works.
+You may then run the provided example executable to ensure everything works e.g. `./build/K_means`.
 
 ## TODO
 - Integrate vcpkg into build system.
