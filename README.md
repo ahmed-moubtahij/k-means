@@ -64,6 +64,7 @@ At the time of writing this, I'm an undergrad in Systems Engineering, and this i
 ```
     cd path/to/your/folder
     git clone https://github.com/Ayenem/K_means.git --recursive
+    cd k-means
     mkdir build
     cd build
     cmake ..
