@@ -73,6 +73,8 @@ You may then run the provided example executable to ensure everything works e.g.
 ## TODO
 - Integrate vcpkg into build system.
 - Use the right compiler warning flags in build files.
+- Clang-tidy
+- Clang format
 - Write unit tests (`catch2`).
     - A given input (with fixed `n` and `k`) will have N reference outputs which the output of a given revision of the implementation has to compare against (i.e. references' mean or any one of them) within a tolerance.
         - The comparison would be done by euclidean distance between output ranges of indices.
