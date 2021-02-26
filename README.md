@@ -97,4 +97,4 @@ You may then run the provided example executable to ensure everything works e.g.
 - Look into `#include <immintrin.h>` compiler intrinsics.
 
 ## Thanks
-My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: sarah, Léo, marcorubini, oktal, Lesley Lai and ninjawedding. Also Lorely for the CMake stuff.
+My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: _sarah_, _Léo_, _marcorubini_, _oktal_, _Lesley Lai_ and _ninjawedding_. _Lorely_ for the CMake stuff. _tre_ and _Nicole Mazzuca_ for the vcpkg stuff.
