@@ -1,20 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 
-if(NOT DEFINED VCPKG_ROOT)
-	if(DEFINED ENV{VCPKG_ROOT})
-		set(VCPKG_ROOT $ENV{VCPKG_ROOT} CACHE PATH "Path to vcpkg directory")
-	endif()
-endif()
-
-if(DEFINED VCPKG_ROOT)
-	set(
-		CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-		CACHE PATH "Path to vcpkg toolchain")
-
-	if(NOT EXISTS "${CMAKE_TOOLCHAIN_FILE}")
-		message(FATAL_ERROR "Invalid VCPKG_ROOT specified (${VCPKG_ROOT}); please specify an absolute path")
-	endif()
-endif()
+set(
+	CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+	CACHE PATH "Path to vcpkg toolchain")
 
 project(k-means CXX)
 
