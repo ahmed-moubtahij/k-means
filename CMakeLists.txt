@@ -24,6 +24,9 @@ set_project_warnings(project_warnings)
 include(cmake/Sanitizers.cmake)
 enable_sanitizers(project_options)
 
+# allow for static analysis options
+include(cmake/StaticAnalyzers.cmake)
+
 # find vcpkg packages
 find_package(fmt CONFIG REQUIRED)
 find_package(range-v3 CONFIG REQUIRED)
