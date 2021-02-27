@@ -1,13 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(
-	CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-	CACHE PATH "Path to vcpkg toolchain"
-   )
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    CACHE PATH "Path to vcpkg toolchain")
 
 project(k-means CXX)
 include(cmake/StandardProjectSettings.cmake)
-
 
 # Link this 'library' to use the warnings specified in CompilerWarnings.cmake
 add_library(project_warnings INTERFACE)
