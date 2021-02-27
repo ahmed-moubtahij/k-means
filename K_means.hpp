@@ -264,7 +264,7 @@ struct k_means_result
   auto end() -> iterator { return { *this, cluster_sizes.size() }; }
 };
 
-void print_kmn_result(auto&& opt_kmn_result)
+void print_kmn_result(auto&& optional_kmn_result)
 { 
   using fmt::print, r3::to;
   for (auto&& [centroid, satellites] : *FWD(optional_kmn_result))
