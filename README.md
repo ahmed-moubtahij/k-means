@@ -81,6 +81,7 @@ You may then run the provided example executable to ensure everything works e.g.
     - A given input (with fixed `n` and `k`) will have N reference outputs which the output of a given revision of the implementation has to compare against (i.e. references' mean or any one of them) within a tolerance.
         - The comparison would be done by euclidean distance between output ranges of indices.
     - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
+- Set up CI.
 - Subject further refactorings to TDD.
 - See what should be `const` and `const` it if the used `(std::)ranges::views` adaptors allow it.
     - Leave a comment for when `const` is appropriate but isn't allowed.
@@ -96,4 +97,4 @@ You may then run the provided example executable to ensure everything works e.g.
 - Look into `#include <immintrin.h>` compiler intrinsics.
 
 ## Thanks
-My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: _sarah_, _Léo_, _marcorubini_, _oktal_, _Lesley Lai_ and _ninjawedding_. _Lorely_ for the CMake stuff. _tre_, _Nicole Mazzuca_ and _Robert Schumacher_ for the vcpkg stuff.
+My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: _sarah_, _Léo_, _marcorubini_, _oktal_, _Lesley Lai_ and _ninjawedding_. _Lorely_ and _melak-47_ for the CMake stuff. _tre_, _Nicole Mazzuca_ and _Robert Schumacher_ for the vcpkg stuff.
