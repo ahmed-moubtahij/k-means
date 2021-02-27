@@ -6,6 +6,7 @@ set(
    )
 
 project(k-means CXX)
+include(cmake/StandardProjectSettings.cmake)
 
 add_executable(${PROJECT_NAME} example.cpp "DataPoint.hpp")
 
