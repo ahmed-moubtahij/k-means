@@ -3,7 +3,7 @@ add_executable(demo demo.cpp)
 target_link_libraries(
   demo
   PRIVATE
-    k-means-lib
+    kmn
     project_options
     project_warnings
     fmt::fmt
