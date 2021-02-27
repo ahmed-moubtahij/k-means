@@ -1,0 +1,8 @@
+{
+  "name": "k-means",
+  "version": "0.0.1",
+  "dependencies": [
+    "fmt",
+    "range-v3"
+  ]
+}
