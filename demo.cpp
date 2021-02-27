@@ -4,7 +4,6 @@ int main() {
     using std::array, std::vector;
     using kmn::DataPoint, kmn::print_kmn_result, kmn::k_means;
     using fmt::print;
-
     //INPUT ranges
     auto const int_arr_df =
         array{ DataPoint(1, 2, 3),    DataPoint(4, 5, 6),    DataPoint(7, 8, 9),
