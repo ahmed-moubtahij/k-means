@@ -39,11 +39,14 @@ int main() {
     //CALL & DISPLAY RESULT
     std::size_t const k{ 4 }, n{ 10 };
     // k_means(int_arr_df, out_indices, k, n);
-    auto kmn_result = k_means(int_arr_df, out_indices, k, n);
-    fmt::print("Input data points:\n{}\n\n", int_arr_df);
-    fmt::print("Cluster indices for each point:\n {}\n\n", out_indices);
-    fmt::print("Points partitionned into clusters:\n\n");
-    print_kmn_result(kmn_result);
+    if (auto&& kmn_result = k_means(int_arr_df, out_indices, k, n))
+    {
+      print("Cluster indices for each point:\n {}\n\n", out_indices);
+      print("Points partitionned into clusters:\n\n");
+      print_kmn_result(std::move(kmn_result));
+    } else {
+        print("k_means returned std::nullopt\n");
+    };
     //UNIT TEST: Ensure #satellites ==  #data_points
     return 0;
 }

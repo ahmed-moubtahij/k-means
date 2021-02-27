@@ -266,15 +266,14 @@ struct k_means_result
 
 void print_kmn_result(auto&& opt_kmn_result)
 { 
-  using fmt::print;
-  if(auto&& kmn_result = FWD(opt_kmn_result))
-  { 
-    for(auto&& [centroid, satellites] : *FWD(kmn_result))    
-    { print("Centroid: {}\n", FWD(centroid));    
-      print("Satellites: {}\n\n", FWD(satellites));
-    }
-  } else
-    print("k_means call is invalid; returned std::nullopt.\n");
+  using fmt::print, r3::to;
+  for (auto&& [centroid, satellites] : *FWD(optional_kmn_result))
+  {
+    print("Centroid: {}\n", FWD(centroid));
+    using satellite_t = range_value_t<decltype(satellites)>;
+    print("Satellites: {}\n\n", FWD(satellites)
+        | to<vector<satellite_t>>);
+  }
 }
 
 template<typename IDX_R>
