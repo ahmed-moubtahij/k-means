@@ -38,6 +38,7 @@ int main() {
     vector<std::size_t> out_indices(int_arr_df.size());
     //CALL & DISPLAY RESULT
     std::size_t const k{ 4 }, n{ 10 };
+    print("Input data points:\n{}\n\n", int_arr_df);
     // k_means(int_arr_df, out_indices, k, n);
     if (auto&& kmn_result = k_means(int_arr_df, out_indices, k, n))
     {
