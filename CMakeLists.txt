@@ -8,7 +8,7 @@ set(
 project(k-means CXX)
 include(cmake/StandardProjectSettings.cmake)
 
-add_executable(${PROJECT_NAME} example.cpp "DataPoint.hpp")
+add_executable(${PROJECT_NAME} demo.cpp "DataPoint.hpp")
 
 find_package(fmt CONFIG REQUIRED)
 find_package(range-v3 CONFIG REQUIRED)
