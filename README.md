@@ -68,7 +68,7 @@ At the time of writing this, I'm an undergrad in Systems Engineering, and this i
     cmake -B build
     cmake --build build
 ```
-You may then run the provided example executable to ensure everything works e.g. `./build/K_means`.
+You may then execute the provided example to ensure everything works e.g. `./build/src/demo`.
 
 ## TODO
 - Use the right compiler warning flags in build files.
