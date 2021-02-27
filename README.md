@@ -63,7 +63,7 @@ At the time of writing this, I'm an undergrad in Systems Engineering, and this i
 **Build Instructions**
 ```
     cd path/to/your/folder
-    git clone https://github.com/Ayenem/K_means.git --recursive
+    git clone https://github.com/Ayenem/k-means.git --recursive
     cd k-means
     cmake -B build
     cmake --build build
