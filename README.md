@@ -84,6 +84,7 @@ You may then run the provided example executable to ensure everything works e.g.
     - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
 - Subject further refactorings to TDD.
 - See what should be `const` and `const` it if the used `(std::)ranges::views` adaptors allow it.
+    - Leave a comment for when `const` is appropriate but isn't allowed.
 - Look into how to detect moves/copies of types (including library types)
 - Make sure these are used as they should be: move semantics, RVO, in-place construction, `explicit` ctors, `noexcept`...etc.
 - Look into SBO for the returned vectors.
