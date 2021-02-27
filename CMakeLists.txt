@@ -6,6 +6,9 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems
 project(k-means CXX)
 include(cmake/StandardProjectSettings.cmake)
 
+add_library(k-means-lib INTERFACE)
+target_include_directories(k-means-lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include/k-means-lib)
+
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
 target_compile_features(project_options INTERFACE cxx_std_20)

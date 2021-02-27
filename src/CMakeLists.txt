@@ -1,8 +1,9 @@
-add_executable(demo demo.cpp "../DataPoint.hpp")
+add_executable(demo demo.cpp)
 
 target_link_libraries(
   demo
   PRIVATE
+    k-means-lib
     project_options
     project_warnings
     fmt::fmt
