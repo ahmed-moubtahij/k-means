@@ -162,8 +162,8 @@ void update_centroids(auto&& data_points,
                       auto&& out_indices,
                       auto&& indexed_centroids)
 { auto constexpr mean_matching_points =
-  [](auto&& data_points)
-  { using data_point_t = range_value_t<decltype(data_points)>;
+  [](auto&& points)
+  { using data_point_t = range_value_t<decltype(points)>;
     size_type count{};
     //input range is a filter_view which is not a sized range
     //so an elements' count is used instead of size()
@@ -172,8 +172,8 @@ void update_centroids(auto&& data_points,
     { ++count; return pt1 + pt2; };
     //count is a side effect of counted_sum,
     //so sum must be calculated separately
-    auto const sum = std::reduce(stdr::begin(data_points),
-                                 stdr::end(data_points),
+    auto const sum = std::reduce(stdr::begin(points),
+                                 stdr::end(points),
                                  data_point_t(), counted_sum);
     return sum / count;
   };
