@@ -1,4 +1,4 @@
-#include <include/kmn/K_means.hpp>
+#include <kmn/K_means.hpp>
 
 int main() {
     using std::array, std::vector;

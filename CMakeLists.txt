@@ -7,7 +7,7 @@ project(k-means CXX)
 include(cmake/StandardProjectSettings.cmake)
 
 add_library(kmn INTERFACE)
-target_include_directories(kmn INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include/kmn)
+target_include_directories(kmn INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
