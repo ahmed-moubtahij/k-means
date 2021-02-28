@@ -66,7 +66,7 @@ namespace hlpr
   using data_point_t = range_value_t<R>;
   /************************** point_value_t ******************************/
   template<typename R>
-  using point_value_t = data_point_t<R>::value_type;
+  using point_value_t = typename data_point_t<R>::value_type;
   /***************************** Concepts ********************************/
   template<typename R>
   concept data_points_range = is_data_point_v<range_value_t<R>>;
