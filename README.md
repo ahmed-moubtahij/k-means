@@ -82,6 +82,7 @@ You may then execute the provided example to ensure everything works e.g. `./bui
         - The comparison would be done by euclidean distance between output ranges of indices.
     - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
 - Set up CI.
+    - _ninjawedding@includecpp_: if you've got CI configured you should have at least one test configuration that runs your tests with sanitizers enabled.  if you don't have CI configured and this is a library you want others to use, you need to configure CI
 - Subject further refactorings to TDD.
 - See what should be `const` and `const` it if the used `(std::)ranges::views` adaptors allow it.
     - Leave a comment for when `const` is appropriate but isn't allowed.
