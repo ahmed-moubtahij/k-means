@@ -12,7 +12,7 @@
 #include <range/v3/view/transform.hpp>   //Used when pipe chain contains a range-v3 adaptor
 #include <range/v3/view/sample.hpp>      //Used over std::ranges::sample for pipability & lazy semantics
 #include <fmt/ranges.h>
-#include "DataPoint.hpp"
+#include <kmn/DataPoint.hpp>
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
