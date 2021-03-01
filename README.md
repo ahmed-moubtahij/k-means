@@ -84,9 +84,11 @@ You may then execute the provided example to ensure everything works e.g. `./bui
 - Set up CI.
     - _ninjawedding@includecpp_: if you've got CI configured you should have at least one test configuration that runs your tests with sanitizers enabled.  if you don't have CI configured and this is a library you want others to use, you need to configure CI
 - Subject further refactorings to TDD.
+- Decide if returning the input range and out indices is useful.
 - See what should be `const` and `const` it if the used `(std::)ranges::views` adaptors allow it.
     - Leave a comment for when `const` is appropriate but isn't allowed.
-- Look into how to detect moves/copies of types (including library types)
+- Prettify `print_kmn_result` with a tabular format display.
+- Look into how to detect moves/copies of types (including library types).
 - Make sure these are used as they should be: move semantics, RVO, in-place construction, `explicit` ctors, `noexcept`...etc.
 - Look into SBO for the returned vectors.
 - Measure compile & run performance.
