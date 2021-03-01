@@ -3,3 +3,4 @@ out/
 build/
 CMakeCache.txt
 CMakeFiles/
+CMakeSettings.json
