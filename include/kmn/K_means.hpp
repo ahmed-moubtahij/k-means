@@ -210,14 +210,11 @@ void index_points_by_centroids(auto&& out_indices,
               find_id_nearest_centroid);
 }
 
-auto gen_cluster_sizes(auto const& out_indices, size_type k)
+auto gen_cluster_sizes(auto const& indices, size_type k)
 {   
-  auto const count_indices =
-  [&out_indices](size_type index)
-  { return stdr::count(out_indices, index); };
-  
-  return stdv::iota(std::size_t{ 1 }, k + 1)
-         | stdv::transform(count_indices);
+  std::vector<size_type> cluster_sizes(k);  
+  for (auto i : indices) ++cluster_sizes[i - 1];
+  return cluster_sizes;
 }
 
 template <typename CENTROIDS_R, typename SIZES_R,
