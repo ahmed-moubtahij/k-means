@@ -267,12 +267,31 @@ struct k_means_result
 void print_kmn_result(auto&& optional_kmn_result)
 { 
   using fmt::print, r3::to;
-  for (auto&& [centroid, satellites] : *FWD(optional_kmn_result))
-  {
+
+  constexpr auto print_separator = []{ print("{:-^{}}\n", "", 77); };
+
+  auto&& kmn_result = *FWD(optional_kmn_result);
+  
+  auto&& [centroids, cluster_sizes, input_points, out_indices] = kmn_result;
+
+  print("Input data points:\n{}\n", input_points);
+  print_separator();
+  print("Cluster indices for each point:\n {}\n", out_indices);
+  print_separator();
+  print("Centroids: {}\n", centroids);
+  print_separator();
+  print("Cluster Sizes: {}\n\n", cluster_sizes);
+  print_separator();
+  print("{:*^77}\n", " CLUSTERS ");
+  print_separator();
+  
+  for(auto&& [centroid, satellites] : kmn_result)
+  { 
     print("Centroid: {}\n", FWD(centroid));
     using satellite_t = range_value_t<decltype(satellites)>;
-    print("Satellites: {}\n\n", FWD(satellites)
-        | to<vector<satellite_t>>);
+    print("Satellites: {}\n", FWD(satellites)
+                              | to<vector<satellite_t>>);
+    print_separator();
   }
 }
 

@@ -33,20 +33,17 @@ int main() {
     //        DataPoint(28, 29, 30), DataPoint(31, 32, 33), DataPoint(34, 35, 36),
     //        DataPoint(37, 38, 39), DataPoint(40, 41, 42), DataPoint(43, 44, 45)};
 
-    //OUTPUT range
+    //OUTPUT RANGE
     vector<std::size_t> out_indices(int_arr_df.size());
-    //CALL & DISPLAY RESULT
+    
+    //FUNCTION ARGUMENTS; k: Number of clusters, n: partitionning resolution
     std::size_t const k{ 4 }, n{ 10 };
-    print("Input data points:\n{}\n\n", int_arr_df);
-    // k_means(int_arr_df, out_indices, k, n);
-    if (auto&& kmn_result = k_means(int_arr_df, out_indices, k, n))
-    {
-      print("Cluster indices for each point:\n {}\n\n", out_indices);
-      print("Points partitionned into clusters:\n\n");
+    
+    //CALL & DISPLAY RESULT
+    if(auto&& kmn_result = k_means(int_arr_df, out_indices, k, n))
       print_kmn_result(std::move(kmn_result));
-    } else {
-        print("k_means returned std::nullopt\n");
-    };
-    //UNIT TEST: Ensure #satellites ==  #data_points
+    else
+      print("k_means returned std::nullopt\n");
+    
     return 0;
 }
