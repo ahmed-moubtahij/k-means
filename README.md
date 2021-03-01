@@ -72,6 +72,7 @@ You may then execute the provided example to ensure everything works e.g. `./bui
 
 ## TODO
 - Get it working (if the implementations allow it) in clang and msvc.
+    - clang hasn't implemented `views::iota` yet; https://godbolt.org/z/WdnPbE
     - _tre@includecpp_: I tried compiling to check things MSVC is missing. IIRC, they're: Abbreviated function templates, optional typename, and `std::ranges::iota_view`. `iota_view` implementation just got merged [expected to be in VS 16.10 Preview 2]. https://github.com/microsoft/STL/pull/1693
         - abbreviated function templates are in VS 16.9 
 - Drop `std::ranges` and stick with `range-v3` instead of mixing them?
