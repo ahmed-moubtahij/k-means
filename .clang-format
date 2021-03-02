@@ -1,5 +1,6 @@
 # https://releases.llvm.org/11.0.1/tools/clang/docs/ClangFormatStyleOptions.html
 AccessModifierOffset: -2
+
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: false
 AlignConsecutiveBitFields: false
@@ -8,6 +9,7 @@ AlignConsecutiveMacros: false
 AlignEscapedNewlines: DontAlign
 AlignOperands: AlignAfterOperator
 AlignTrailingComments: false
+
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowAllConstructorInitializersOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: false
@@ -18,11 +20,14 @@ AllowShortFunctionsOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: true
 AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: true
+
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: MultiLine
+
 BinPackArguments: true
 BinPackParameters: true
+
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterCaseLabel: false
@@ -40,24 +45,36 @@ BraceWrapping:
   SplitEmptyFunction: false
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
+
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: AfterColon
 BreakStringLiterals: true
+
 ColumnLimit: 75
+
 CommentPragmas: '^ IWYU pragma:'
+
 CompactNamespaces: false
+
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 0
+
 ContinuationIndentWidth: 0
+
 Cpp11BracedListStyle: false
+
 DeriveLineEnding: true
 DerivePointerAlignment: true
+
 DisableFormat: false
+
 ExperimentalAutoDetectBinPacking: true
+
 FixNamespaceComments: true
+
 IncludeBlocks: Regroup
 IncludeCategories:
 - Priority: 2
@@ -67,22 +84,23 @@ IncludeCategories:
 - Priority: 1
   Regex: .*
 IncludeIsMainRegex: (Test)?$
+
 IndentCaseBlocks: false
 IndentCaseLabels: true
 IndentPPDirectives: AfterHash
 IndentWidth: 2
 IndentWrappedFunctionNames: false
+
 KeepEmptyLinesAtTheStartOfBlocks: false
-Language: Cpp
 MaxEmptyLinesToKeep: 1
+
+Language: Cpp
+Standard: Latest
+
 NamespaceIndentation: Inner
 
-PointerAlignment: Right
-ReflowComments: true
 SortIncludes: false
 SortUsingDeclarations: false
-SpaceAfterCStyleCast: false
-SpaceAfterTemplateKeyword: false
 
 # PenaltyBreakAssignment:
 # PenaltyBreakBeforeFirstCallParameter:
@@ -94,11 +112,10 @@ SpaceAfterTemplateKeyword: false
 # PenaltyReturnTypeOnItsOwnLine:
 
 PointerAlignment: Left
+
 ReflowComments: false
-SortIncludes: false
-SortUsingDeclarations: false
+
 SpaceAfterCStyleCast: false
-SpaceAfterTemplateKeyword: false
 SpaceAfterLogicalNot: true
 SpaceAfterTemplateKeyword: false
 SpaceBeforeAssignmentOperators:	true
@@ -116,5 +133,5 @@ SpacesInCStyleCastParentheses: false
 SpacesInConditionalStatement: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard: Latest
+
 UseTab: Never
