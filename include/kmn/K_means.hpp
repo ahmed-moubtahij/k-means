@@ -144,10 +144,12 @@ auto init_centroids(PTS_R&& data_points, size_type k)
   {
     auto const centroids =
     FWD(data_points) | sample(k) | to<centroids_t>();
+
     return zip(ids, centroids) | to<id_centroids_t>();
 
-  } else // data_points here has integral value types 'T'
-  { // centroids (which get updated with means) have floating point value
+  } else {
+    // data_points here has integral value types 'T'
+    // centroids (which get updated with means) have floating point value
     // types So the sampled points' value types need to match
     using data_pt_t =
     DataPoint<pt_value_t, data_point_size_v<data_point_t<PTS_R>>>;
@@ -250,17 +252,16 @@ template<typename CENTROIDS_R,
          typename SIZES_R, //
          typename INPUT_R, //
          typename OUTPUT_R>
-struct k_means_result
-{
-  CENTROIDS_R centroids;
-  SIZES_R cluster_sizes;
-  INPUT_R points;
-  OUTPUT_R out_indices;
+class k_means_result {
+  CENTROIDS_R m_centroids;
+  SIZES_R m_cluster_sizes;
+  INPUT_R m_points;
+  OUTPUT_R m_out_indices;
 
   static constexpr auto filter = r3v::filter;
   static constexpr auto values = r3v::values;
 
-  using indexed_range = decltype(zip(FWD(out_indices), FWD(points)));
+  using indexed_range = decltype(zip(FWD(m_out_indices), FWD(m_points)));
 
   using filtered_indexed_range =
   decltype(declval<indexed_range>() | filter(match_id{}));
@@ -268,6 +269,29 @@ struct k_means_result
   using filtered_range =
   decltype(declval<filtered_indexed_range>() | values);
 
+public:
+  k_means_result(CENTROIDS_R centroids,
+                 SIZES_R cluster_sizes,
+                 INPUT_R points,
+                 OUTPUT_R out_indices)
+  : m_centroids{ centroids }, m_cluster_sizes{ cluster_sizes },
+    m_points{ points }, m_out_indices{ out_indices }
+  { }
+
+  // clang-format off
+  auto centroids() const -> CENTROIDS_R
+  { return m_centroids; }
+
+  auto cluster_sizes() const -> SIZES_R
+  { return m_cluster_sizes; }
+
+  auto points() const -> INPUT_R
+  { return m_points; }
+
+  auto out_indices() const -> OUTPUT_R
+  { return m_out_indices; }
+
+  // clang-format on
   struct iterator
   {
     k_means_result& parent;
@@ -281,8 +305,8 @@ struct k_means_result
     
     auto operator*() const -> cluster
     {
-      return { parent.centroids[cluster_idx],
-               zip(FWD(parent.out_indices), FWD(parent.points))
+      return { parent.m_centroids[cluster_idx],
+               zip(FWD(parent.m_out_indices), FWD(parent.m_points))
                | filter(match_id{ cluster_idx + 1 })
                | values };
     }
@@ -298,7 +322,7 @@ struct k_means_result
   { return { *this, size_type{ 0 } }; }
   
   auto end() -> iterator
-  { return { *this, cluster_sizes.size() }; }
+  { return { *this, m_cluster_sizes.size() }; }
   
 }; // struct k_means_result
 
@@ -317,15 +341,15 @@ void print_kmn_result(auto&& optional_kmn_result)
   };
 
   auto&& kmn_result = *FWD(optional_kmn_result);
-  // clang-format off
-  auto&& [centroids, cluster_sizes, 
-          input_points, out_indices] = kmn_result;
-  // clang-format on
 
-  print_block(" Input data points ", input_points);
-  print_block(" Cluster indices for each point ", out_indices);
-  print_block(" Centroids ", centroids);
-  print_block(" Cluster Sizes ", cluster_sizes);
+  print_block(" Input data points ", //
+              kmn_result.points());
+  print_block(" Cluster indices for each point ",
+              kmn_result.out_indices());
+  print_block(" Centroids ", //
+              kmn_result.centroids());
+  print_block(" Cluster Sizes ", //
+              kmn_result.cluster_sizes());
 
   print("{:*^{}}\n\n", " CLUSTERS ", decorator_width);
 
