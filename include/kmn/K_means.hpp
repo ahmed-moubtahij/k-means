@@ -269,29 +269,6 @@ class k_means_result {
   using filtered_range =
   decltype(declval<filtered_indexed_range>() | values);
 
-public:
-  k_means_result(CENTROIDS_R centroids,
-                 SIZES_R cluster_sizes,
-                 INPUT_R points,
-                 OUTPUT_R out_indices)
-  : m_centroids{ centroids }, m_cluster_sizes{ cluster_sizes },
-    m_points{ points }, m_out_indices{ out_indices }
-  { }
-
-  // clang-format off
-  auto centroids() const -> CENTROIDS_R
-  { return m_centroids; }
-
-  auto cluster_sizes() const -> SIZES_R
-  { return m_cluster_sizes; }
-
-  auto points() const -> INPUT_R
-  { return m_points; }
-
-  auto out_indices() const -> OUTPUT_R
-  { return m_out_indices; }
-
-  // clang-format on
   struct iterator
   {
     k_means_result& parent;
@@ -317,6 +294,31 @@ public:
     { return lhs.cluster_idx == rhs.cluster_idx; }
     
   }; // struct k_means_result::iterator
+
+  // clang-format on
+public:
+  k_means_result(CENTROIDS_R centroids,
+                 SIZES_R cluster_sizes,
+                 INPUT_R points,
+                 OUTPUT_R out_indices)
+  : m_centroids{ centroids }, //
+    m_cluster_sizes{ cluster_sizes }, //
+    m_points{ points }, //
+    m_out_indices{ out_indices }
+  { }
+
+  // clang-format off
+  auto centroids() const -> CENTROIDS_R
+  { return m_centroids; }
+
+  auto cluster_sizes() const -> SIZES_R
+  { return m_cluster_sizes; }
+
+  auto points() const -> INPUT_R
+  { return m_points; }
+
+  auto out_indices() const -> OUTPUT_R
+  { return m_out_indices; }
 
   auto begin() -> iterator
   { return { *this, size_type{ 0 } }; }
