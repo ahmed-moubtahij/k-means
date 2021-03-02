@@ -209,7 +209,7 @@ void index_points_by_centroids(auto&& out_indices,
                     find_id_nearest_centroid);
 }
 
-auto gen_cluster_sizes(auto const& indices, size_type k)
+auto clusters_histogram(auto const& indices, size_type k)
 {   
   std::vector<size_type> cluster_sizes(k);  
   for (auto i : indices) ++cluster_sizes[i - 1];
@@ -300,7 +300,7 @@ void print_kmn_result(auto&& optional_kmn_result)
 
 template<typename IDX_R>
 using cluster_sizes_t =
-decltype(gen_cluster_sizes(declval<IDX_R>(), declval<size_type>()));
+decltype(clusters_histogram(declval<IDX_R>(), declval<size_type>()));
 
 template<typename PTS_R, typename IDX_R>
 using k_means_impl_t =
@@ -323,7 +323,7 @@ k_means_impl(PTS_R&& data_points, IDX_R&& out_indices,
   }
   return { r3v::values(indexed_centroids)
            | r3::to<vector<centroid_t<PTS_R>>>(),
-           gen_cluster_sizes(FWD(out_indices), k),
+           clusters_histogram(FWD(out_indices), k),
            FWD(data_points), FWD(out_indices)
          };
 }
