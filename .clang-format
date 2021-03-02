@@ -1,3 +1,4 @@
+# https://releases.llvm.org/11.0.1/tools/clang/docs/ClangFormatStyleOptions.html
 AccessModifierOffset: -2
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: false
@@ -31,8 +32,6 @@ BraceWrapping:
   AfterFunction: true
   AfterNamespace: false
   AfterStruct: true
-  AfterUnion: true
-  AfterExternBlock: false
   BeforeCatch: false
   BeforeElse: false
   BeforeLambdaBody: true
@@ -41,4 +40,81 @@ BraceWrapping:
   SplitEmptyFunction: false
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
-BreakBeforeBinaryOperators: 
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBraces: Custom
+BreakBeforeTernaryOperators: false
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: AfterColon
+BreakStringLiterals: true
+ColumnLimit: 75
+CommentPragmas: '^ IWYU pragma:'
+CompactNamespaces: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerIndentWidth: 0
+ContinuationIndentWidth: 0
+Cpp11BracedListStyle: false
+DeriveLineEnding: true
+DerivePointerAlignment: true
+DisableFormat: false
+ExperimentalAutoDetectBinPacking: true
+FixNamespaceComments: true
+IncludeBlocks: Regroup
+IncludeCategories:
+- Priority: 2
+  Regex: ^"(llvm|llvm-c|clang|clang-c)/
+- Priority: 3
+  Regex: ^(<|"(gtest|gmock|isl|json)/)
+- Priority: 1
+  Regex: .*
+IncludeIsMainRegex: (Test)?$
+IndentCaseBlocks: false
+IndentCaseLabels: true
+IndentPPDirectives: AfterHash
+IndentWidth: 2
+IndentWrappedFunctionNames: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+Language: Cpp
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: Inner
+
+PointerAlignment: Right
+ReflowComments: true
+SortIncludes: false
+SortUsingDeclarations: false
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: false
+
+# PenaltyBreakAssignment:
+# PenaltyBreakBeforeFirstCallParameter:
+# PenaltyBreakComment:
+# PenaltyBreakFirstLessLess:
+# PenaltyBreakString:
+# PenaltyBreakTemplateDeclaration:
+# PenaltyExcessCharacter:
+# PenaltyReturnTypeOnItsOwnLine:
+
+PointerAlignment: Left
+ReflowComments: false
+SortIncludes: false
+SortUsingDeclarations: false
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: false
+SpaceAfterLogicalNot: true
+SpaceAfterTemplateKeyword: false
+SpaceBeforeAssignmentOperators:	true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: false
+SpaceBeforeInheritanceColon: false
+SpaceBeforeParens: Never
+SpaceBeforeRangeBasedForLoopColon: false
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: true
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInConditionalStatement: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard: Latest
+UseTab: Never
