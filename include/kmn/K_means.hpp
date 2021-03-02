@@ -263,33 +263,40 @@ struct k_means_result
 
 void print_kmn_result(auto&& optional_kmn_result)
 { 
-  using fmt::print, r3::to;
+    using fmt::print;
 
-  constexpr auto print_separator = []{ print("{:-^{}}\n", "", 77); };
+    auto const decorator_width = 77;
 
-  auto&& kmn_result = *FWD(optional_kmn_result);
-  
-  auto&& [centroids, cluster_sizes, input_points, out_indices] = kmn_result;
+    auto constexpr print_block =
+        [decorator_width](std::string_view title, auto&& printable)
+    {
+        print("{:-^{}}\n", title, decorator_width);
+        print("\n{}\n\n", printable);
+    };
 
-  print("Input data points:\n{}\n", input_points);
-  print_separator();
-  print("Cluster indices for each point:\n {}\n", out_indices);
-  print_separator();
-  print("Centroids: {}\n", centroids);
-  print_separator();
-  print("Cluster Sizes: {}\n\n", cluster_sizes);
-  print_separator();
-  print("{:*^77}\n", " CLUSTERS ");
-  print_separator();
-  
-  for(auto&& [centroid, satellites] : kmn_result)
-  { 
-    print("Centroid: {}\n", FWD(centroid));
-    using satellite_t = range_value_t<decltype(satellites)>;
-    print("Satellites: {}\n", FWD(satellites)
-                              | to<vector<satellite_t>>);
-    print_separator();
-  }
+    auto&& kmn_result = *FWD(optional_kmn_result);
+    auto&& [centroids, cluster_sizes, input_points, out_indices] = kmn_result;
+
+    print_block(" Input data points ", input_points);
+    print_block(" Cluster indices for each point ", out_indices);
+    print_block(" Centroids ", centroids);
+    print_block(" Cluster Sizes ", cluster_sizes);
+
+    print("{:*^{}}\n\n", " CLUSTERS ", decorator_width);
+
+    using r3::to;
+    for (std::size_t i{ 1 };
+        auto && [centroid, satellites] : kmn_result)
+    {
+        print("{:-^{}}\n",
+            fmt::format(" Centroid {}: {} ", i++, centroid),
+            decorator_width);
+
+        using satellite_t = range_value_t<decltype(satellites)>;
+        print("\n{}\n\n", FWD(satellites)
+            | to<vector<satellite_t>>);
+        //Note: to<vector> conversion is needed for fmt 7.0.0, it won't be after                 
+    }
 }
 
 template<typename IDX_R>
