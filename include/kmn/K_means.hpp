@@ -26,7 +26,6 @@ namespace r3 = ranges; //range-v3
 namespace r3v = r3::views;
 
 using stdr::range_value_t;
-using stdr::transform;
 using stdv::filter;
 
 using r3v::zip;
@@ -178,13 +177,13 @@ void update_centroids(auto&& data_points,
     return sum / count;
   };
 
-  transform(r3v::keys(indexed_centroids),
-            r3::begin(r3v::values(indexed_centroids)),
-            [&](auto const& cent_id)
-            { return mean_matching_points(zip(FWD(out_indices), FWD(data_points))
-                                          | r3v::filter(match_id{cent_id})
-                                          | r3v::values);
-            });
+  stdr::transform(r3v::keys(indexed_centroids),
+                  r3::begin(r3v::values(indexed_centroids)),
+                  [&](auto const& cent_id)
+                  { return mean_matching_points(zip(FWD(out_indices), FWD(data_points))
+                                                | r3v::filter(match_id{cent_id})
+                                                | r3v::values);
+                  });
 }
 
 void index_points_by_centroids(auto&& out_indices,
@@ -205,9 +204,9 @@ void index_points_by_centroids(auto&& out_indices,
     };
     //Find the ID of the nearest centroid to each data point,
     //and write it to the output range
-    transform(FWD(data_points),
-              std::begin(FWD(out_indices)),
-              find_id_nearest_centroid);
+    stdr::transform(FWD(data_points),
+                    std::begin(FWD(out_indices)),
+                    find_id_nearest_centroid);
 }
 
 auto gen_cluster_sizes(auto const& indices, size_type k)
