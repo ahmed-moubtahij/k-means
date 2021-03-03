@@ -270,7 +270,7 @@ class k_means_result {
   decltype(std::declval<filtered_indexed_range>() //
            | values);
 
-  struct iterator
+  struct const_iterator
   {
     k_means_result const& parent;
     size_type cluster_idx;
@@ -290,13 +290,13 @@ class k_means_result {
                | values };
     }
 
-    auto operator++() -> iterator&
+    auto operator++() -> const_iterator&
     { return (void(++cluster_idx), *this); }
 
-    friend bool operator==(iterator lhs, iterator rhs)
+    friend bool operator==(const_iterator lhs, const_iterator rhs)
     { return lhs.cluster_idx == rhs.cluster_idx; }
     
-  }; // struct k_means_result::iterator
+  }; // struct k_means_result::const_iterator
 
   // clang-format on
 public:
@@ -323,10 +323,10 @@ public:
   auto out_indices() const -> OUTPUT_R
   { return m_out_indices; }
 
-  auto begin() -> iterator
+  auto begin() const -> const_iterator
   { return { *this, size_type{ 0 } }; }
   
-  auto end() -> iterator
+  auto end() const -> const_iterator
   { return { *this, m_cluster_sizes.size() }; }
   
 }; // struct k_means_result
