@@ -78,8 +78,9 @@ using namespace hlpr;
 
 // sqr_dist: computes euclidean square distance between two data points
 template<typename T1, typename T2, size_type D>
-constexpr auto sqr_distance(DataPoint<T1, D> const& dp1,
-                            DataPoint<T2, D> const& dp2)
+[[nodiscard]] constexpr //
+auto sqr_distance(DataPoint<T1, D> const& dp1, //
+                  DataPoint<T2, D> const& dp2)
 {
   return std::transform_reduce(
   dp1.cbegin(), dp1.cend(), dp2.cbegin(), 0,
@@ -104,8 +105,9 @@ struct distance_from
 
   // clang-format off
   template<typename U>
-  constexpr bool operator()(DataPoint<U, D> const& c1,
-                            DataPoint<U, D> const& c2) const
+  [[nodiscard]] constexpr
+  auto operator()(DataPoint<U, D> const& c1,
+                  DataPoint<U, D> const& c2) const -> bool
   { return sqr_distance(c1, m_pt) < sqr_distance(c2, m_pt); }
 }; // struct distance_from
 
@@ -120,6 +122,7 @@ using indexed_centroids_t =
 std::vector<std::pair<size_type, centroid_t<PTS_R>>>;
 
 template<typename PTS_R>
+[[nodiscard]] //
 auto init_centroids(PTS_R&& data_points, size_type k)
 -> indexed_centroids_t<PTS_R>
 {
@@ -164,7 +167,8 @@ struct match_id
 {
   size_type cent_id;
   // clang-format off
-  constexpr bool operator()(auto const& indexed_point) const
+  [[nodiscard]] constexpr
+  auto operator()(auto const& indexed_point) const -> bool
   { return cent_id == std::get<0>(indexed_point); }
   
 }; //struct match_id
@@ -238,7 +242,9 @@ void index_points_by_centroids(auto&& out_indices,
 }
 // clang-format on
 
+[[nodiscard]] //
 auto clusters_histogram(auto const& indices, size_type k)
+-> std::vector<size_type>
 {
   std::vector<size_type> cluster_sizes(k);
   for(auto i: indices) ++cluster_sizes[i - 1];
@@ -282,6 +288,7 @@ class k_means_result {
     };
 
     // clang-format off
+    [[nodiscard]]
     auto operator*() const -> cluster
     {
       return { parent.m_centroids[cluster_idx],
@@ -293,7 +300,9 @@ class k_means_result {
     auto operator++() -> const_iterator&
     { return (void(++cluster_idx), *this); }
 
-    friend bool operator==(const_iterator lhs, const_iterator rhs)
+    [[nodiscard]] friend
+    auto operator==(const_iterator lhs,
+                    const_iterator rhs) -> bool
     { return lhs.cluster_idx == rhs.cluster_idx; }
     
   }; // struct k_means_result::const_iterator
@@ -311,21 +320,27 @@ public:
   { }
 
   // clang-format off
+  [[nodiscard]] constexpr
   auto centroids() const -> CENTROIDS_R
   { return m_centroids; }
 
+  [[nodiscard]] constexpr
   auto cluster_sizes() const -> SIZES_R
   { return m_cluster_sizes; }
 
+  [[nodiscard]] constexpr
   auto points() const -> INPUT_R
   { return m_points; }
 
+  [[nodiscard]] constexpr
   auto out_indices() const -> OUTPUT_R
   { return m_out_indices; }
 
+  [[nodiscard]]
   auto begin() const -> const_iterator
   { return { *this, size_type{ 0 } }; }
   
+  [[nodiscard]]
   auto end() const -> const_iterator
   { return { *this, m_cluster_sizes.size() }; }
   
@@ -338,8 +353,8 @@ void print_kmn_result(auto&& optional_kmn_result)
 
   auto const decorator_width = 77;
 
-  auto constexpr print_block =
-  [decorator_width](std::string_view title, auto&& printable)
+  auto constexpr print_block = [decorator_width](std::string_view title, //
+                                                 auto&& printable)
   {
     print("{:-^{}}\n", title, decorator_width);
     print("\n{}\n\n", printable);
@@ -384,9 +399,10 @@ using k_means_impl_t = k_means_result<std::vector<centroid_t<PTS_R>>, //
                                       PTS_R, IDX_R>;
 
 template<typename PTS_R, typename IDX_R>
-constexpr auto k_means_impl(PTS_R&& data_points, //
-                            IDX_R&& out_indices, //
-                            size_type k, size_type n)
+[[nodiscard]] constexpr //
+auto k_means_impl(PTS_R&& data_points, //
+                  IDX_R&& out_indices, //
+                  size_type k, size_type n)
 -> k_means_impl_t<PTS_R, IDX_R>
 { // Initialize centroids and their ids
   auto&& indexed_centroids = init_centroids(FWD(data_points), k);
@@ -395,8 +411,9 @@ constexpr auto k_means_impl(PTS_R&& data_points, //
                             FWD(indexed_centroids));
 
   // Update the centroids with means, repeat n times
-  while(n--) {
-    update_centroids(FWD(data_points), FWD(out_indices),
+  while(n--) //
+  {
+    update_centroids(FWD(data_points), FWD(out_indices), //
                      FWD(indexed_centroids));
   }
 
@@ -409,22 +426,23 @@ constexpr auto k_means_impl(PTS_R&& data_points, //
            FWD(out_indices) };
 }
 
+// clang-format off
 struct k_means_fn
-{
+{ 
   template<data_points_range PTS_R, unsigned_range IDX_R>
-  constexpr auto operator()(
-  PTS_R&& data_points, // Not mutated but a reference to it is
-  // returned; Will be moved if it's an rvalue
-  // so as to not return a dangling reference
-  IDX_R&& out_indices, // Is an rvalue reference instead of lvalue
-  // reference to handle rvalue arguments such
-  // as views-like objects
-  size_type k, size_type n) const noexcept
+  [[nodiscard]] constexpr
+  auto operator()(PTS_R&& data_points,
+                  // Not mutated but a reference to it is returned;
+                  // it will be moved in if it's an rvalue
+                  // so as to not return a dangling reference.
+                  IDX_R&& out_indices,
+                  // Is an rvalue reference instead of lvalue reference
+                  // to handle rvalue arguments such as views-like objects
+                  size_type k, size_type n) const noexcept
   -> std::optional<k_means_impl_t<PTS_R, IDX_R>>
   {
     if(k < 2) return std::nullopt;
 
-    // clang-format off
     // distance() is used instead of size() to support non-sized range
     // arguments such as "data_points_arg | filter(...)"
     if(auto const pts_dist = stdr::distance(data_points);
@@ -434,11 +452,11 @@ struct k_means_fn
     else if(auto const pts_size = static_cast<size_type>(pts_dist);
             pts_size < k or pts_size != stdr::size(out_indices))
     { return std::nullopt; }
-    // clang-format on
 
-    return { k_means_impl<PTS_R, IDX_R>(FWD(data_points), //
-                                        FWD(out_indices), //
-                                        k, n) };
+    return { k_means_impl<PTS_R, IDX_R>(FWD(data_points),
+                                        FWD(out_indices),
+                                        k, n)
+           };
   }
 };
 
