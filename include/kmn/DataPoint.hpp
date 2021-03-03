@@ -30,30 +30,30 @@ struct DataPoint final: private std::array<T, D>
     requires(sizeof...(coords) == D)
   : std::array<T, D>{ coords... }
   { }
-  // clang-format on
 
-  friend constexpr bool operator<=>(DataPoint const&,
-                                    DataPoint const&) = default;
+  friend constexpr auto
+  operator<=>(DataPoint const&,
+              DataPoint const&) -> bool = default;
 
   // operator+ is a hidden friend because:
   // f(a, b) considers implicit conversion for a and b
   // whereas a.f(b) only considers it for b
   // meaning "a + b" and "b + a" might have different behavior
   // Hidden -only found through ADL- friends are preferred for symmetric operations
-  friend constexpr auto operator+(DataPoint const& lhs,
-                                  DataPoint const& rhs) //
-  -> DataPoint
+  [[nodiscard]] friend constexpr
+  auto operator+(DataPoint const& lhs,
+                 DataPoint const& rhs) -> DataPoint
   {
     DataPoint res;
     stdr::transform(lhs, rhs, res.begin(), std::plus{});
     return res;
   }
 
-  // clang-format off
   // operator/ overload for floating point value type;
   // result's value type matches it
-  constexpr auto operator/(arithmetic auto n) const
-  -> DataPoint<value_type, D>//
+  [[nodiscard]] constexpr
+  auto operator/(arithmetic auto n) const
+  -> DataPoint<value_type, D>
     requires(std::floating_point<value_type>)
   {
     DataPoint<value_type, D> res;
@@ -62,10 +62,10 @@ struct DataPoint final: private std::array<T, D>
                     { return e / static_cast<value_type>(n); });
     return res;
   }
-  // clang-format on
 
   // operator/ overload for integer T => result's value type = double
-  constexpr auto operator/(arithmetic auto n) const //
+  [[nodiscard]] constexpr
+  auto operator/(arithmetic auto n) const
   -> DataPoint<double, D>
   {
     DataPoint<double, D> res;
@@ -75,8 +75,10 @@ struct DataPoint final: private std::array<T, D>
     return res;
   }
 
+  // clang-format on
   template<std::floating_point U>
-  constexpr explicit operator DataPoint<U, D>() const
+  [[nodiscard]] constexpr
+  explicit operator DataPoint<U, D>() const
   {
     DataPoint<double, D> res;
     stdr::transform(*this, res.begin(),
