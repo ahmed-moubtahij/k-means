@@ -25,14 +25,6 @@ namespace stdv = std::views;
 namespace r3 = ranges; // range-v3
 namespace r3v = r3::views;
 
-using stdr::range_value_t;
-using stdv::filter;
-
-using r3v::zip;
-
-using std::declval;
-using std::vector;
-
 namespace hlpr {
   /************************ select_centroid ******************************/
   // clang-format off
@@ -70,6 +62,7 @@ namespace hlpr {
   inline constexpr size_type data_point_size_v = data_point_size<T>::value;
 
   /************************** data_point_t *******************************/
+  using stdr::range_value_t;
   template<typename R> using data_point_t = range_value_t<R>;
   /************************** point_value_t ******************************/
   template<typename R>
@@ -124,7 +117,7 @@ select_centroid_t<point_value_t<PTS_R>,
 
 template<typename PTS_R>
 using indexed_centroids_t =
-vector<std::pair<size_type, centroid_t<PTS_R>>>;
+std::vector<std::pair<size_type, centroid_t<PTS_R>>>;
 
 template<typename PTS_R>
 auto init_centroids(PTS_R&& data_points, size_type k)
@@ -134,12 +127,13 @@ auto init_centroids(PTS_R&& data_points, size_type k)
   using r3v::sample, r3::to;
   using id_centroids_t = indexed_centroids_t<PTS_R>;
   using centroids_t =
-  vector<typename id_centroids_t::value_type::second_type>;
+  std::vector<typename id_centroids_t::value_type::second_type>;
 
   // Initialize centroid ids
   auto const ids = stdv::iota(size_type{ 1 }, k + 1);
 
   // Initialize centroids with a sample of K points from data_points
+  using r3v::zip;
   if constexpr(std::floating_point<pt_value_t>) //
   {
     auto const centroids =
@@ -182,7 +176,7 @@ void update_centroids(auto&& data_points,
 {
   auto constexpr mean_matching_points = [](auto&& points)
   {
-    using data_point_t = range_value_t<decltype(points)>;
+    using data_point_t = stdr::range_value_t<decltype(points)>;
     size_type count{};
     // an elements' count is used instead of size()
     // because the input range is a filter_view which is not a sized_range
@@ -200,7 +194,10 @@ void update_centroids(auto&& data_points,
     return sum / count;
   };
 
-  using stdr::transform, r3v::keys, r3v::values, r3::begin, r3v::filter;
+  // clang-format off
+  using stdr::transform, r3v::keys, r3v::values,
+        r3::begin, r3v::filter, r3v::zip;
+  // clang-format on
 
   transform(keys(indexed_centroids),
             begin(values(indexed_centroids)),
@@ -260,26 +257,31 @@ class k_means_result {
 
   static constexpr auto filter = r3v::filter;
   static constexpr auto values = r3v::values;
+  static constexpr auto zip = r3v::zip;
 
-  using indexed_range = decltype(zip(FWD(m_out_indices), FWD(m_points)));
+  using indexed_range = //
+  decltype(zip(FWD(m_out_indices), FWD(m_points)));
 
-  using filtered_indexed_range =
-  decltype(declval<indexed_range>() | filter(match_id{}));
+  using filtered_indexed_range = //
+  decltype(std::declval<indexed_range>() //
+           | filter(match_id{}));
 
-  using filtered_range =
-  decltype(declval<filtered_indexed_range>() | values);
+  using filtered_range = //
+  decltype(std::declval<filtered_indexed_range>() //
+           | values);
 
   struct iterator
   {
     k_means_result const& parent;
     size_type cluster_idx;
 
-    // clang-format off
-    struct cluster 
-    { range_value_t<CENTROIDS_R> const& centroid;
+    struct cluster
+    {
+      stdr::range_value_t<CENTROIDS_R> const& centroid;
       filtered_range satellites;
-    }; // struct k_means_result::iterator::cluster
-    
+    };
+
+    // clang-format off
     auto operator*() const -> cluster
     {
       return { parent.m_centroids[cluster_idx],
@@ -363,19 +365,21 @@ void print_kmn_result(auto&& optional_kmn_result)
           fmt::format(" Centroid {}: {} ", i++, centroid),
           decorator_width);
 
-    using satellite_t = range_value_t<decltype(satellites)>;
+    using satellite_t = stdr::range_value_t<decltype(satellites)>;
     using r3::to;
-    print("\n{}\n\n", FWD(satellites) | to<vector<satellite_t>>);
+    print("\n{}\n\n", FWD(satellites) //
+                      | to<std::vector<satellite_t>>);
     // ranges::to<container> conversion is needed for fmt 7.0.0, it won't be after
   }
 }
 
 template<typename IDX_R>
 using cluster_sizes_t =
-decltype(clusters_histogram(declval<IDX_R>(), declval<size_type>()));
+decltype(clusters_histogram(std::declval<IDX_R>(), //
+                            std::declval<size_type>()));
 
 template<typename PTS_R, typename IDX_R>
-using k_means_impl_t = k_means_result<vector<centroid_t<PTS_R>>, //
+using k_means_impl_t = k_means_result<std::vector<centroid_t<PTS_R>>, //
                                       cluster_sizes_t<IDX_R>, //
                                       PTS_R, IDX_R>;
 
@@ -395,8 +399,11 @@ constexpr auto k_means_impl(PTS_R&& data_points, //
     update_centroids(FWD(data_points), FWD(out_indices),
                      FWD(indexed_centroids));
   }
-  return { (r3v::values(indexed_centroids)
-            | r3::to<vector<centroid_t<PTS_R>>>()),
+
+  using r3v::values, r3::to, std::vector;
+
+  return { (values(indexed_centroids) //
+            | to<vector<centroid_t<PTS_R>>>()),
            clusters_histogram(FWD(out_indices), k), //
            FWD(data_points), //
            FWD(out_indices) };
