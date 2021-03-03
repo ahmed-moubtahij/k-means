@@ -271,12 +271,12 @@ class k_means_result {
 
   struct iterator
   {
-    k_means_result& parent;
+    k_means_result const& parent;
     size_type cluster_idx;
 
     // clang-format off
     struct cluster 
-    { range_value_t<CENTROIDS_R>& centroid;
+    { range_value_t<CENTROIDS_R> const& centroid;
       filtered_range satellites;
     }; // struct k_means_result::iterator::cluster
     
@@ -288,7 +288,8 @@ class k_means_result {
                | values };
     }
 
-    void operator++(){ ++cluster_idx; }
+    auto operator++() -> iterator&
+    { return (void(++cluster_idx), *this); }
 
     friend bool operator==(iterator lhs, iterator rhs)
     { return lhs.cluster_idx == rhs.cluster_idx; }
@@ -416,18 +417,17 @@ struct k_means_fn
   {
     if(k < 2) return std::nullopt;
 
+    // clang-format off
     // distance() is used instead of size() to support non-sized range
     // arguments such as "data_points_arg | filter(...)"
     if(auto const pts_dist = stdr::distance(data_points);
        not std::in_range<size_type>(pts_dist))
-    {
-      return std::nullopt; // Fall if distance(data_points) is signed
-    } //
+    { return std::nullopt; } // Fall if distance(data_points) is signed
+    
     else if(auto const pts_size = static_cast<size_type>(pts_dist);
             pts_size < k or pts_size != stdr::size(out_indices))
-    {
-      return std::nullopt;
-    }
+    { return std::nullopt; }
+    // clang-format on
 
     return { k_means_impl<PTS_R, IDX_R>(FWD(data_points), //
                                         FWD(out_indices), //
