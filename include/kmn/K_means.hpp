@@ -309,6 +309,12 @@ class k_means_result {
 
   // clang-format on
 public:
+  k_means_result() = delete;
+  k_means_result& operator=(k_means_result const&) = delete;
+  k_means_result(k_means_result const&) = default;
+  k_means_result& operator=(k_means_result&&) = default;
+  k_means_result(k_means_result&&) = default;
+
   k_means_result(CENTROIDS_R centroids,
                  SIZES_R cluster_sizes,
                  INPUT_R points,

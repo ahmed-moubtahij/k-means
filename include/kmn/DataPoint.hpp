@@ -9,7 +9,7 @@ namespace stdr = std::ranges;
 template<typename T>
 concept arithmetic = std::integral<T> or std::floating_point<T>;
 
-// Class template DataPoint
+// Struct template DataPoint
 template<arithmetic T, std::size_t D>
 struct DataPoint final: private std::array<T, D>
 {
