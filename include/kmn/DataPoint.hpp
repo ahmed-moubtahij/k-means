@@ -1,6 +1,6 @@
-#include <algorithm>
 #include <array>
 #include <concepts>
+#include <algorithm>
 
 namespace kmn {
 
@@ -31,9 +31,9 @@ struct DataPoint final: private std::array<T, D>
   : std::array<T, D>{ coords... }
   { }
 
-  friend constexpr auto
-  operator<=>(DataPoint const&,
-              DataPoint const&) -> bool = default;
+  [[nodiscard]] friend constexpr
+  auto operator<=>(DataPoint const&,
+                   DataPoint const&) -> bool = default;
 
   // operator+ is a hidden friend because:
   // f(a, b) considers implicit conversion for a and b

@@ -122,7 +122,7 @@ using indexed_centroids_t =
 std::vector<std::pair<size_type, centroid_t<PTS_R>>>;
 
 template<typename PTS_R>
-[[nodiscard]] //
+[[nodiscard]] constexpr //
 auto init_centroids(PTS_R&& data_points, size_type k)
 -> indexed_centroids_t<PTS_R>
 {
@@ -174,9 +174,9 @@ struct match_id
 }; //struct match_id
 
 // clang-format on
-void update_centroids(auto&& data_points,
-                      auto&& out_indices,
-                      auto&& indexed_centroids)
+constexpr void update_centroids(auto&& data_points,
+                                auto&& out_indices,
+                                auto&& indexed_centroids)
 {
   auto constexpr mean_matching_points = [](auto&& points)
   {
@@ -213,9 +213,9 @@ void update_centroids(auto&& data_points,
             });
 }
 
-void index_points_by_centroids(auto&& out_indices,
-                               auto&& data_points,
-                               auto const& indexed_centroids)
+constexpr void index_points_by_centroids(auto&& out_indices,
+                                         auto&& data_points,
+                                         auto const& indexed_centroids)
 {
   auto constexpr dist_from_centroid = //
   [](auto const& pt) { return distance_from{ pt }; };
@@ -225,8 +225,8 @@ void index_points_by_centroids(auto&& out_indices,
 
   // clang-format off
   auto const find_id_nearest_centroid =
-  [&](auto const& pt) // stdr::borrowed_iterator has no operator->
-  { 
+  [&](auto const& pt)
+  { // stdr::borrowed_iterator has no operator->
     return (*stdr::min_element(indexed_centroids,
                                dist_from_centroid(pt),
                                proj_centroid)).first;
@@ -242,7 +242,7 @@ void index_points_by_centroids(auto&& out_indices,
 }
 // clang-format on
 
-[[nodiscard]] //
+[[nodiscard]] constexpr //
 auto clusters_histogram(auto const& indices, size_type k)
 -> std::vector<size_type>
 {
@@ -288,7 +288,7 @@ class k_means_result {
     };
 
     // clang-format off
-    [[nodiscard]]
+    [[nodiscard]] constexpr
     auto operator*() const -> cluster
     {
       return { parent.m_centroids[cluster_idx],
@@ -297,10 +297,10 @@ class k_means_result {
                | values };
     }
 
-    auto operator++() -> const_iterator&
+    constexpr auto operator++() -> const_iterator&
     { return (void(++cluster_idx), *this); }
 
-    [[nodiscard]] friend
+    [[nodiscard]] friend constexpr
     auto operator==(const_iterator lhs,
                     const_iterator rhs) -> bool
     { return lhs.cluster_idx == rhs.cluster_idx; }
@@ -315,10 +315,10 @@ public:
   k_means_result& operator=(k_means_result&&) = default;
   k_means_result(k_means_result&&) = default;
 
-  k_means_result(CENTROIDS_R centroids,
-                 SIZES_R cluster_sizes,
-                 INPUT_R points,
-                 OUTPUT_R out_indices)
+  constexpr k_means_result(CENTROIDS_R centroids,
+                           SIZES_R cluster_sizes,
+                           INPUT_R points,
+                           OUTPUT_R out_indices)
   : m_centroids{ centroids }, //
     m_cluster_sizes{ cluster_sizes }, //
     m_points{ points }, //
