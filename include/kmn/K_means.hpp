@@ -5,12 +5,18 @@
 #include <kmn/DataPoint.hpp>
 #include <numeric>
 #include <optional>
-#include <range/v3/range/conversion.hpp> //std::ranges doesn't have to(_container)
-#include <range/v3/view/filter.hpp> //Used when pipe chain contains a range-v3 adaptor
-#include <range/v3/view/map.hpp> //Used when pipe chain contains a range-v3 adaptor
-#include <range/v3/view/sample.hpp> //Used over std::ranges::sample for pipability & lazy semantics
-#include <range/v3/view/transform.hpp> //Used when pipe chain contains a range-v3 adaptor
-#include <range/v3/view/zip.hpp> //std::ranges doesn't have zip
+//std::ranges doesn't have to(_container)
+#include <range/v3/range/conversion.hpp>
+//Used when pipe chain contains a range-v3 adaptor
+#include <range/v3/view/filter.hpp>
+//Used when pipe chain contains a range-v3 adaptor
+#include <range/v3/view/map.hpp>
+//Used over std::ranges::sample for pipability & lazy semantics
+#include <range/v3/view/sample.hpp>
+//Used when pipe chain contains a range-v3 adaptor
+#include <range/v3/view/transform.hpp>
+//std::ranges doesn't have zip
+#include <range/v3/view/zip.hpp>
 #include <ranges>
 #include <vector>
 
@@ -59,7 +65,8 @@ namespace hlpr {
 
   // clang-format on
   template<typename T>
-  inline constexpr size_type data_point_size_v = data_point_size<T>::value;
+  inline constexpr size_type data_point_size_v = //
+  data_point_size<T>::value;
 
   /************************** data_point_t *******************************/
   using stdr::range_value_t;
@@ -76,7 +83,8 @@ namespace hlpr {
 
 using namespace hlpr;
 
-// sqr_dist: computes euclidean square distance between two data points
+// sqr_dist: computes euclidean square distance
+//           between two data points
 template<typename T1, typename T2, size_type D>
 [[nodiscard]] constexpr //
 auto sqr_distance(DataPoint<T1, D> const& dp1, //
@@ -89,7 +97,7 @@ auto sqr_distance(DataPoint<T1, D> const& dp1, //
 }
 
 // distance_from: Function Object Comparator
-//               of distances from two points to a reference point
+//                of distances from two points to a reference point
 template<typename T, size_type D> //
 struct distance_from
 {
@@ -139,23 +147,26 @@ auto init_centroids(PTS_R&& data_points, size_type k)
   using r3v::zip;
   if constexpr(std::floating_point<pt_value_t>) //
   {
-    auto const centroids =
-    FWD(data_points) | sample(k) | to<centroids_t>();
+    auto const centroids = FWD(data_points) //
+                         | sample(k) //
+                         | to<centroids_t>();
 
     return zip(ids, centroids) | to<id_centroids_t>();
 
   } else {
     // data_points here has integral value types 'T'
-    // centroids (which get updated with means) have floating point value
-    // types So the sampled points' value types need to match
+    // centroids (which get updated with means) have floating point
+    // value types So the sampled points' value types need to match
     using data_pt_t =
     DataPoint<pt_value_t, data_point_size_v<data_point_t<PTS_R>>>;
+    using r3v::transform;
 
     auto constexpr cast_to_cendroid_t = [](data_pt_t const& pt)
     { return static_cast<centroid_t<PTS_R>>(pt); };
 
-    auto const centroids = FWD(data_points)
-                         | r3v::transform(cast_to_cendroid_t) | sample(k)
+    auto const centroids = FWD(data_points) //
+                         | transform(cast_to_cendroid_t) //
+                         | sample(k) //
                          | to<centroids_t>();
 
     return zip(ids, centroids) | to<id_centroids_t>();
@@ -182,8 +193,8 @@ constexpr void update_centroids(auto&& data_points,
   {
     using data_point_t = stdr::range_value_t<decltype(points)>;
     size_type count{};
-    // an elements' count is used instead of size()
-    // because the input range is a filter_view which is not a sized_range
+    // an elements' count is used instead of size() because
+    // the input range is a filter_view i.e. not a sized_range
     auto const counted_sum =
     [&count](data_point_t const& pt1, data_point_t const& pt2)
     { return (void(++count), pt1 + pt2); };
@@ -191,10 +202,10 @@ constexpr void update_centroids(auto&& data_points,
 
     // sum must be calculated separately
     // because count is a side effect of counted_sum
-    auto const sum = //
-    std::reduce(stdr::begin(points), stdr::end(points), //
-                data_point_t(), counted_sum);
+    using std::reduce, stdr::begin, stdr::end;
 
+    auto const sum = reduce(begin(points), end(points), //
+                            data_point_t(), counted_sum);
     return sum / count;
   };
 
@@ -215,7 +226,7 @@ constexpr void update_centroids(auto&& data_points,
 
 constexpr void index_points_by_centroids(auto&& out_indices,
                                          auto&& data_points,
-                                         auto const& indexed_centroids)
+                                         auto const& id_centroids)
 {
   auto constexpr dist_from_centroid = //
   [](auto const& pt) { return distance_from{ pt }; };
@@ -227,7 +238,7 @@ constexpr void index_points_by_centroids(auto&& out_indices,
   auto const find_id_nearest_centroid =
   [&](auto const& pt)
   { // stdr::borrowed_iterator has no operator->
-    return (*stdr::min_element(indexed_centroids,
+    return (*stdr::min_element(id_centroids,
                                dist_from_centroid(pt),
                                proj_centroid)).first;
   };
@@ -243,7 +254,8 @@ constexpr void index_points_by_centroids(auto&& out_indices,
 // clang-format on
 
 [[nodiscard]] constexpr //
-auto clusters_histogram(auto const& indices, size_type k)
+auto clusters_histogram(auto const& indices,
+                        size_type k)
 -> std::vector<size_type>
 {
   std::vector<size_type> cluster_sizes(k);
@@ -350,7 +362,7 @@ public:
   auto end() const -> const_iterator
   { return { *this, m_cluster_sizes.size() }; }
   
-}; // struct k_means_result
+}; // class k_means_result
 
 // clang-format on
 void print_kmn_result(auto&& optional_kmn_result)
@@ -359,8 +371,9 @@ void print_kmn_result(auto&& optional_kmn_result)
 
   auto const decorator_width = 77;
 
-  auto constexpr print_block = [decorator_width](std::string_view title, //
-                                                 auto&& printable)
+  auto constexpr print_block = //
+  [decorator_width](std::string_view title, //
+                    auto&& printable)
   {
     print("{:-^{}}\n", title, decorator_width);
     print("\n{}\n\n", printable);
@@ -390,7 +403,8 @@ void print_kmn_result(auto&& optional_kmn_result)
     using r3::to;
     print("\n{}\n\n", FWD(satellites) //
                       | to<std::vector<satellite_t>>);
-    // ranges::to<container> conversion is needed for fmt 7.0.0, it won't be after
+    // ranges::to<container> conversion is needed for fmt 7.0.0,
+    // it won't be after
   }
 }
 
@@ -400,9 +414,10 @@ decltype(clusters_histogram(std::declval<IDX_R>(), //
                             std::declval<size_type>()));
 
 template<typename PTS_R, typename IDX_R>
-using k_means_impl_t = k_means_result<std::vector<centroid_t<PTS_R>>, //
-                                      cluster_sizes_t<IDX_R>, //
-                                      PTS_R, IDX_R>;
+using k_means_impl_t = //
+k_means_result<std::vector<centroid_t<PTS_R>>, //
+               cluster_sizes_t<IDX_R>, //
+               PTS_R, IDX_R>;
 
 template<typename PTS_R, typename IDX_R>
 [[nodiscard]] constexpr //
@@ -442,18 +457,18 @@ struct k_means_fn
                   // it will be moved in if it's an rvalue
                   // so as to not return a dangling reference.
                   IDX_R&& out_indices,
-                  // Is an rvalue reference instead of lvalue reference
-                  // to handle rvalue arguments such as views-like objects
+                  // Is an rvalue ref instead of lvalue ref
+                  // to handle rvalue args such as views-like objects
                   size_type k, size_type n) const noexcept
   -> std::optional<k_means_impl_t<PTS_R, IDX_R>>
   {
     if(k < 2) return std::nullopt;
 
-    // distance() is used instead of size() to support non-sized range
+    // distance() is used over size() to support non-sized range
     // arguments such as "data_points_arg | filter(...)"
     if(auto const pts_dist = stdr::distance(data_points);
        not std::in_range<size_type>(pts_dist))
-    { return std::nullopt; } // Fall if distance(data_points) is signed
+    { return std::nullopt; } // Fall if distance() is signed
     
     else if(auto const pts_size = static_cast<size_type>(pts_dist);
             pts_size < k or pts_size != stdr::size(out_indices))

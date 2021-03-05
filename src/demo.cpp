@@ -4,13 +4,15 @@ int main()
 {
   using kmn::DataPoint, kmn::print_kmn_result, kmn::k_means;
   // INPUT ranges
-  auto const int_arr_df = std::array{
-    DataPoint(1, 2, 3),    DataPoint(4, 5, 6),    DataPoint(7, 8, 9),
-    DataPoint(28, 29, 30), DataPoint(31, 32, 33), DataPoint(34, 35, 36),
-    DataPoint(19, 20, 21), DataPoint(22, 23, 24), DataPoint(25, 26, 27),
-    DataPoint(10, 11, 12), DataPoint(13, 14, 15), DataPoint(16, 17, 18),
-    DataPoint(37, 38, 39), DataPoint(40, 41, 42), DataPoint(43, 44, 45)
-  };
+  auto const int_arr_df =
+  std::array{ DataPoint(1, 2, 3),    DataPoint(4, 5, 6),
+              DataPoint(7, 8, 9),    DataPoint(28, 29, 30),
+              DataPoint(31, 32, 33), DataPoint(34, 35, 36),
+              DataPoint(19, 20, 21), DataPoint(22, 23, 24),
+              DataPoint(25, 26, 27), DataPoint(10, 11, 12),
+              DataPoint(13, 14, 15), DataPoint(16, 17, 18),
+              DataPoint(37, 38, 39), DataPoint(40, 41, 42),
+              DataPoint(43, 44, 45) };
 
   // auto const double_arr_df =
   // std::array{DataPoint(1., 2., 3.),    DataPoint(4., 5., 6.),

@@ -53,7 +53,7 @@ BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: AfterColon
 BreakStringLiterals: true
 
-ColumnLimit: 75
+ColumnLimit: 70
 
 CommentPragmas: '^ IWYU pragma:'
 

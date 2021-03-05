@@ -77,8 +77,8 @@ struct DataPoint final: private std::array<T, D>
 
   // clang-format on
   template<std::floating_point U>
-  [[nodiscard]] constexpr
-  explicit operator DataPoint<U, D>() const
+  [[nodiscard]] constexpr explicit //
+  operator DataPoint<U, D>() const
   {
     DataPoint<double, D> res;
     stdr::transform(*this, res.begin(),
