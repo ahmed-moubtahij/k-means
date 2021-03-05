@@ -39,7 +39,8 @@ struct DataPoint final: private std::array<T, D>
   // f(a, b) considers implicit conversion for a and b
   // whereas a.f(b) only considers it for b
   // meaning "a + b" and "b + a" might have different behavior
-  // Hidden -only found through ADL- friends are preferred for symmetric operations
+  // Hidden -only found through ADL- friends are preferred
+  // for symmetric operations
   [[nodiscard]] friend constexpr
   auto operator+(DataPoint const& lhs,
                  DataPoint const& rhs) -> DataPoint

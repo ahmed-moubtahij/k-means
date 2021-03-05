@@ -5,18 +5,18 @@
 #include <kmn/DataPoint.hpp>
 #include <numeric>
 #include <optional>
-//std::ranges doesn't have to(_container)
 #include <range/v3/range/conversion.hpp>
-//Used when pipe chain contains a range-v3 adaptor
+//std::ranges doesn't have to(_container)
 #include <range/v3/view/filter.hpp>
 //Used when pipe chain contains a range-v3 adaptor
 #include <range/v3/view/map.hpp>
-//Used over std::ranges::sample for pipability & lazy semantics
-#include <range/v3/view/sample.hpp>
 //Used when pipe chain contains a range-v3 adaptor
+#include <range/v3/view/sample.hpp>
+//Used over std::ranges::sample for pipability & lazy semantics
 #include <range/v3/view/transform.hpp>
-//std::ranges doesn't have zip
+//Used when pipe chain contains a range-v3 adaptor
 #include <range/v3/view/zip.hpp>
+//std::ranges doesn't have zip
 #include <ranges>
 #include <vector>
 
@@ -32,7 +32,7 @@ namespace r3 = ranges; // range-v3
 namespace r3v = r3::views;
 
 namespace hlpr {
-  /************************ select_centroid ******************************/
+  /********************* select_centroid *************************/
   // clang-format off
   
   // if T is integral, picks a floating value type for the centroid
@@ -47,7 +47,7 @@ namespace hlpr {
   template<typename T, size_type D>
   using select_centroid_t = typename select_centroid<T, D>::type;
   
-  /************************* is_data_point *******************************/
+  /********************* is_data_point ***************************/
   
   template<typename T> struct is_data_point: std::false_type { };
 
@@ -56,7 +56,7 @@ namespace hlpr {
   
   template<typename T>
   inline constexpr bool is_data_point_v = is_data_point<T>::value;
-  /************************ data_point_size ******************************/
+  /********************* data_point_size *************************/
   template<typename T> struct data_point_size;
   
   template<typename T, size_type D>
@@ -68,13 +68,13 @@ namespace hlpr {
   inline constexpr size_type data_point_size_v = //
   data_point_size<T>::value;
 
-  /************************** data_point_t *******************************/
+  /********************** data_point_t ***************************/
   using stdr::range_value_t;
   template<typename R> using data_point_t = range_value_t<R>;
-  /************************** point_value_t ******************************/
+  /*********************** point_value_t *************************/
   template<typename R>
   using point_value_t = typename data_point_t<R>::value_type;
-  /***************************** Concepts ********************************/
+  /************************** Concepts ***************************/
   template<typename R>
   concept data_points_range = is_data_point_v<range_value_t<R>>;
   template<typename R>
@@ -323,14 +323,14 @@ class k_means_result {
 public:
   k_means_result() = delete;
   k_means_result& operator=(k_means_result const&) = delete;
-  k_means_result(k_means_result const&) = default;
-  k_means_result& operator=(k_means_result&&) = default;
-  k_means_result(k_means_result&&) = default;
+  k_means_result(k_means_result const&) noexcept = default;
+  k_means_result& operator=(k_means_result&&) noexcept = default;
+  k_means_result(k_means_result&&) noexcept = default;
 
   constexpr k_means_result(CENTROIDS_R centroids,
                            SIZES_R cluster_sizes,
                            INPUT_R points,
-                           OUTPUT_R out_indices)
+                           OUTPUT_R out_indices) noexcept
   : m_centroids{ centroids }, //
     m_cluster_sizes{ cluster_sizes }, //
     m_points{ points }, //

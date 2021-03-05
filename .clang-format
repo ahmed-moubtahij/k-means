@@ -102,15 +102,6 @@ NamespaceIndentation: Inner
 SortIncludes: false
 SortUsingDeclarations: false
 
-# PenaltyBreakAssignment:
-# PenaltyBreakBeforeFirstCallParameter:
-# PenaltyBreakComment:
-# PenaltyBreakFirstLessLess:
-# PenaltyBreakString:
-# PenaltyBreakTemplateDeclaration:
-# PenaltyExcessCharacter:
-# PenaltyReturnTypeOnItsOwnLine:
-
 PointerAlignment: Left
 
 ReflowComments: false
