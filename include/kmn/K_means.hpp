@@ -323,6 +323,7 @@ class k_means_result {
 public:
   k_means_result() = delete;
   k_means_result& operator=(k_means_result const&) = delete;
+  
   k_means_result(k_means_result const&) noexcept = default;
   k_means_result& operator=(k_means_result&&) noexcept = default;
   k_means_result(k_means_result&&) noexcept = default;
