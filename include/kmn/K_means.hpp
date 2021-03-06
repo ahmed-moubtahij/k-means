@@ -340,27 +340,27 @@ public:
 
   // clang-format off
   [[nodiscard]] constexpr
-  auto centroids() const -> CENTROIDS_R
+  auto centroids() const noexcept -> CENTROIDS_R
   { return m_centroids; }
 
   [[nodiscard]] constexpr
-  auto cluster_sizes() const -> SIZES_R
+  auto cluster_sizes() const noexcept -> SIZES_R
   { return m_cluster_sizes; }
 
   [[nodiscard]] constexpr
-  auto points() const -> INPUT_R
+  auto points() const noexcept -> INPUT_R
   { return m_points; }
 
   [[nodiscard]] constexpr
-  auto out_indices() const -> OUTPUT_R
+  auto out_indices() const noexcept -> OUTPUT_R
   { return m_out_indices; }
 
   [[nodiscard]]
-  auto begin() const -> const_iterator
+  auto begin() const noexcept -> const_iterator
   { return { *this, size_type{ 0 } }; }
   
   [[nodiscard]]
-  auto end() const -> const_iterator
+  auto end() const noexcept -> const_iterator
   { return { *this, m_cluster_sizes.size() }; }
   
 }; // class k_means_result
