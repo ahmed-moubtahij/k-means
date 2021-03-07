@@ -24,6 +24,8 @@ struct DataPoint final: private std::array<T, D>
   constexpr DataPoint() noexcept = default;
   constexpr DataPoint(DataPoint const&) noexcept = default;
   constexpr DataPoint& operator=(DataPoint const&) noexcept = default;
+  constexpr DataPoint(DataPoint&&) noexcept = default;
+  constexpr DataPoint& operator=(DataPoint&&) noexcept = default;
 
   // clang-format off
   constexpr DataPoint(auto... coords) noexcept
