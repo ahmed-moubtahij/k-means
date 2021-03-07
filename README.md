@@ -81,13 +81,13 @@ You may then execute the provided example to ensure everything works e.g. `./bui
     - Check https://youtu.be/YbgH7yat-Jo?t=1455 and https://www.youtube.com/watch?v=Ob5_XZrFQH0&t=589s
     - A given input (with fixed `n` and `k`) will have N reference outputs which the output of a given revision of the implementation has to compare against (i.e. references' mean or any one of them) within a tolerance.
         - The comparison would be done by euclidean distance between output ranges of indices.
-    - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.
+    - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.    
 - Set up CI.
     - _ninjawedding@includecpp_: if you've got CI configured you should have at least one test configuration that runs your tests with sanitizers enabled.  if you don't have CI configured and this is a library you want others to use, you need to configure CI
 - Subject further refactorings to TDD.
-- Decide if returning the input range and out indices is useful.
-- See what should be `const` and `const` it if the used `(std::)ranges::views` adaptors allow it.
-    - Leave a comment for when `const` is appropriate but isn't allowed.
+- See if k_means_impl's steps can be made into custom views (see https://youtu.be/d_E-VLyUnzc?list=PLco7M25q_3hCWAYODpIDsq9_IH9oXf04W&t=1035); it's currently operating with eager intermediate operations.
+    - "Just as with borrowed ranges, a type can opt in to being a view using the `enable_view` trait, or by inherting from `ranges::views_base`.
+- Adapt implementation to rvalue inputs either with rvalue ref parameter overload, or with a specialization returning a `kmn::dangling_reference` empty object when appropriate for handling the returned `data_points` and `out_indices` references.
 - Prettify `print_kmn_result` with a tabular format display.
 - Look into how to detect moves/copies of types (including library types).
 - Make sure these are used as they should be: move semantics, RVO, in-place construction, `explicit` ctors, `noexcept`...etc.
