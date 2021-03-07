@@ -105,7 +105,6 @@ struct distance_from
   target_point_t m_pt;
 
   distance_from() = delete;
-  distance_from& operator=(distance_from const&) = delete;
 
   constexpr distance_from(target_point_t const& pt) //
   : m_pt{ pt }
@@ -131,7 +130,7 @@ std::vector<std::pair<size_type, centroid_t<PTS_R>>>;
 
 template<typename PTS_R>
 [[nodiscard]] constexpr //
-auto init_centroids(PTS_R&& data_points, size_type k)
+auto init_centroids(PTS_R const& data_points, size_type k)
 -> indexed_centroids_t<PTS_R>
 {
   using pt_value_t = point_value_t<PTS_R>;
@@ -185,8 +184,8 @@ struct match_id
 }; //struct match_id
 
 // clang-format on
-constexpr void update_centroids(auto&& data_points,
-                                auto&& out_indices,
+constexpr void update_centroids(auto const& data_points,
+                                auto const& out_indices,
                                 auto&& indexed_centroids)
 {
   auto constexpr mean_matching_points = [](auto&& points)
@@ -218,14 +217,14 @@ constexpr void update_centroids(auto&& data_points,
             begin(values(indexed_centroids)),
             [&](auto const& cent_id) { //
               return mean_matching_points(
-              zip(FWD(out_indices), FWD(data_points))
+              zip(out_indices, data_points)
               | filter(match_id{ cent_id }) //
               | values);
             });
 }
 
 constexpr void index_points_by_centroids(auto&& out_indices,
-                                         auto&& data_points,
+                                         auto const& data_points,
                                          auto const& id_centroids)
 {
   auto constexpr dist_from_centroid = //
@@ -435,7 +434,7 @@ auto k_means_impl(PTS_R&& data_points, //
   // Update the centroids with means, repeat n times
   while(n--) //
   {
-    update_centroids(FWD(data_points), FWD(out_indices), //
+    update_centroids(data_points, out_indices, //
                      FWD(indexed_centroids));
   }
 
