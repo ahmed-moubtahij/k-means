@@ -83,7 +83,8 @@ You may then execute the provided example to ensure everything works e.g. `./bui
         - The comparison would be done by euclidean distance between output ranges of indices.
     - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.    
 - Set up CI.
-    - _ninjawedding@includecpp_: if you've got CI configured you should have at least one test configuration that runs your tests with sanitizers enabled.  if you don't have CI configured and this is a library you want others to use, you need to configure CI
+    - _ninjawedding@includecpp_: if you've got CI configured you should have at least one test configuration that runs your tests with sanitizers enabled.
+    - Need to benchmark compile and run times.
 - Subject further refactorings to TDD.
 - See if k_means_impl's steps can be made into custom views (see https://youtu.be/d_E-VLyUnzc?list=PLco7M25q_3hCWAYODpIDsq9_IH9oXf04W&t=1035); it's currently operating with eager intermediate operations.
     - "Just as with borrowed ranges, a type can opt in to being a view using the `enable_view` trait, or by inherting from `ranges::views_base`.
