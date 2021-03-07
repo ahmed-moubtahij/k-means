@@ -1,7 +1,7 @@
-#include <fmt/ranges.h>
+#include <concepts>
 #include <algorithm>
 #include <array>
-#include <concepts>
+#include <fmt/ranges.h>
 #include <kmn/DataPoint.hpp>
 #include <numeric>
 #include <optional>
