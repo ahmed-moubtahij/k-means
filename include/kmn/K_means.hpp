@@ -240,7 +240,7 @@ constexpr void index_points_by_centroids(auto&& out_indices,
   // and write it to the output range
   using stdr::transform, std::begin;
 
-  transform(FWD(data_points),
+  transform(data_points,
             begin(FWD(out_indices)),
             find_id_nearest_centroid);
 }
