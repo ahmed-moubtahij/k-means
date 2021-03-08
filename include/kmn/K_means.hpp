@@ -144,7 +144,7 @@ auto init_centroids(PTS_R const& data_points, size_type k)
   using r3v::zip;
   if constexpr(std::floating_point<pt_value_t>) //
   {
-    auto centroids = sample(data_points, k);
+    auto const centroids = sample(data_points, k);
 
     return to<id_centroids_t>(zip(ids, centroids));
 
@@ -156,11 +156,10 @@ auto init_centroids(PTS_R const& data_points, size_type k)
     DataPoint<pt_value_t, data_point_size_v<data_point_t<PTS_R>>>;
     using r3v::transform;
     
-    auto centroids = data_points
-                   | transform( //
-                     [](data_pt_t const& pt)
-                     { return static_cast<centroid_t<PTS_R>>(pt); })
-                   | sample(k);
+    auto const centroids =
+    data_points | transform([](data_pt_t const& pt) //
+                  { return static_cast<centroid_t<PTS_R>>(pt); }) //
+                | sample(k);
 
     return to<id_centroids_t>(zip(ids, centroids));
   }
