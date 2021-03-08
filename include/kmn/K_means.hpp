@@ -136,8 +136,6 @@ auto init_centroids(PTS_R const& data_points, size_type k)
   using pt_value_t = point_value_t<PTS_R>;
   using r3v::sample, r3::to;
   using id_centroids_t = indexed_centroids_t<PTS_R>;
-  using centroids_t =
-  std::vector<typename id_centroids_t::value_type::second_type>;
 
   // Initialize centroid ids
   auto const ids = stdv::iota(size_type{ 1 }, k + 1);
@@ -146,11 +144,9 @@ auto init_centroids(PTS_R const& data_points, size_type k)
   using r3v::zip;
   if constexpr(std::floating_point<pt_value_t>) //
   {
-    auto const centroids = FWD(data_points) //
-                         | sample(k) //
-                         | to<centroids_t>();
+    auto centroids = sample(data_points, k);
 
-    return zip(ids, centroids) | to<id_centroids_t>();
+    return to<id_centroids_t>(zip(ids, centroids));
 
   } else {
     // data_points here has integral value types 'T'
@@ -159,16 +155,14 @@ auto init_centroids(PTS_R const& data_points, size_type k)
     using data_pt_t =
     DataPoint<pt_value_t, data_point_size_v<data_point_t<PTS_R>>>;
     using r3v::transform;
+    
+    auto centroids = data_points
+                   | transform( //
+                     [](data_pt_t const& pt)
+                     { return static_cast<centroid_t<PTS_R>>(pt); })
+                   | sample(k);
 
-    auto constexpr cast_to_cendroid_t = [](data_pt_t const& pt)
-    { return static_cast<centroid_t<PTS_R>>(pt); };
-
-    auto const centroids = FWD(data_points) //
-                         | transform(cast_to_cendroid_t) //
-                         | sample(k) //
-                         | to<centroids_t>();
-
-    return zip(ids, centroids) | to<id_centroids_t>();
+    return to<id_centroids_t>(zip(ids, centroids));
   }
 }
 
@@ -322,7 +316,7 @@ class k_means_result {
 public:
   k_means_result() = delete;
   k_means_result& operator=(k_means_result const&) = delete;
-  
+
   k_means_result(k_means_result const&) noexcept = default;
   k_means_result& operator=(k_means_result&&) noexcept = default;
   k_means_result(k_means_result&&) noexcept = default;
