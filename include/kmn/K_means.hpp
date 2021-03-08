@@ -155,11 +155,12 @@ auto init_centroids(PTS_R const& data_points, size_type k)
     using data_pt_t =
     DataPoint<pt_value_t, data_point_size_v<data_point_t<PTS_R>>>;
     using r3v::transform;
-    
+
     auto const centroids =
-    data_points | transform([](data_pt_t const& pt) //
-                  { return static_cast<centroid_t<PTS_R>>(pt); }) //
-                | sample(k);
+    data_points
+    | transform([](data_pt_t const& pt)
+                { return static_cast<centroid_t<PTS_R>>(pt); })
+    | sample(k);
 
     return to<id_centroids_t>(zip(ids, centroids));
   }
