@@ -86,17 +86,6 @@ struct DataPoint final: private std::array<T, D>
     return res;
   }
 
-  // clang-format on
-  template<std::floating_point U>
-  [[nodiscard]] constexpr explicit //
-  operator DataPoint<U, D>() const
-  {
-    DataPoint<double, D> res;
-    stdr::transform(*this, res.begin(),
-                    [](value_type num) //
-                    { return static_cast<U>(num); });
-    return res;
-  }
 };
 // DataPoint deduction guide
 template<arithmetic T, typename... Us>
