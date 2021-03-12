@@ -28,8 +28,8 @@ using size_type = std::size_t;
 
 namespace stdr = std::ranges;
 namespace stdv = std::views;
-namespace r3 = ranges; // range-v3
-namespace r3v = r3::views;
+namespace rng = ranges; // range-v3
+namespace rnv = rng::views;
 
 namespace hlpr {
   /********************* select_centroid *************************/
@@ -134,7 +134,7 @@ auto init_centroids(PTS_R const& data_points, size_type k)
 -> indexed_centroids_t<PTS_R>
 {
   using pt_value_t = point_value_t<PTS_R>;
-  using r3v::sample, r3::to, r3v::zip;
+  using rnv::sample, rng::to, rnv::zip;
   using id_centroids_t = indexed_centroids_t<PTS_R>;
 
   // Initialize centroid ids
@@ -156,7 +156,7 @@ auto init_centroids(PTS_R const& data_points, size_type k)
     
     using data_pt_t = DataPoint<pt_value_t, point_size>;
 
-    auto const to_centroids = r3v::transform([](data_pt_t const& pt)
+    auto const to_centroids = rnv::transform([](data_pt_t const& pt)
                              { return centroid_t<PTS_R>(pt); });
 
     return to<id_centroids_t>(zip(ids, sample_points | to_centroids));
@@ -200,8 +200,8 @@ constexpr void update_centroids(auto const& data_points,
   };
 
   // clang-format off
-  using stdr::transform, r3v::keys, r3v::values,
-        r3::begin, r3v::filter, r3v::zip;
+  using stdr::transform, rnv::keys, rnv::values,
+        rng::begin, rnv::filter, rnv::zip;
   // clang-format on
 
   transform(keys(indexed_centroids),
@@ -263,9 +263,9 @@ class k_means_result {
   INPUT_R m_points;
   OUTPUT_R m_out_indices;
 
-  static constexpr auto filter = r3v::filter;
-  static constexpr auto values = r3v::values;
-  static constexpr auto zip = r3v::zip;
+  static constexpr auto filter = rnv::filter;
+  static constexpr auto values = rnv::values;
+  static constexpr auto zip = rnv::zip;
 
   using indexed_range = //
   decltype(zip(FWD(m_out_indices), FWD(m_points)));
@@ -391,7 +391,7 @@ void print_kmn_result(auto&& optional_kmn_result)
           decorator_width);
 
     using satellite_t = stdr::range_value_t<decltype(satellites)>;
-    using r3::to;
+    using rng::to;
     print("\n{}\n\n", FWD(satellites) //
                       | to<std::vector<satellite_t>>);
     // ranges::to<container> conversion is needed for fmt 7.0.0,
@@ -429,7 +429,7 @@ auto k_means_impl(PTS_R&& data_points, //
                      FWD(indexed_centroids));
   }
 
-  using r3v::values, r3::to, std::vector;
+  using rnv::values, rng::to, std::vector;
 
   return { (values(indexed_centroids) //
             | to<vector<centroid_t<PTS_R>>>()),
