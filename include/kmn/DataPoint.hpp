@@ -1,6 +1,7 @@
 #include <concepts>
 #include <algorithm>
 #include <array>
+#include <cassert>
 
 namespace kmn {
 
@@ -28,14 +29,21 @@ struct DataPoint final: private std::array<T, D>
   constexpr DataPoint& operator=(DataPoint&&) noexcept = default;
 
   // clang-format off
-  constexpr DataPoint(auto... coords) noexcept
+  template<typename ...Ts>
+  constexpr explicit(sizeof...(Ts) == 1)
+  DataPoint(Ts ...coords) noexcept
     requires(sizeof...(coords) == D)
   : std::array<T, D>{ coords... }
   { }
 
-  [[nodiscard]] friend constexpr
-  auto operator<=>(DataPoint const&,
-                   DataPoint const&) -> bool = default;
+  template<stdr::sized_range R>
+  constexpr explicit
+  DataPoint(R r) noexcept
+    requires(std::convertible_to<stdr::range_value_t<R>, value_type>)
+  {
+    assert(stdr::size(r) == D);
+    stdr::copy(std::move(r), begin());
+  }
 
   // operator+ is a hidden friend because:
   // f(a, b) considers implicit conversion for a and b
