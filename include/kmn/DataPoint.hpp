@@ -29,9 +29,9 @@ struct DataPoint final: private std::array<T, D>
   constexpr DataPoint& operator=(DataPoint&&) noexcept = default;
 
   // clang-format off
-  template<typename ...Ts>
+  template<std::convertible_to<value_type> ...Ts>
   constexpr explicit(sizeof...(Ts) == 1)
-  DataPoint(Ts ...coords) noexcept
+  DataPoint(Ts... coords) noexcept
     requires(sizeof...(coords) == D)
   : std::array<T, D>{ coords... }
   { }
