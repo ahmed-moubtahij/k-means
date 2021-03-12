@@ -134,35 +134,32 @@ auto init_centroids(PTS_R const& data_points, size_type k)
 -> indexed_centroids_t<PTS_R>
 {
   using pt_value_t = point_value_t<PTS_R>;
-  using r3v::sample, r3::to;
+  using r3v::sample, r3::to, r3v::zip;
   using id_centroids_t = indexed_centroids_t<PTS_R>;
 
   // Initialize centroid ids
   auto const ids = stdv::iota(size_type{ 1 }, k + 1);
+  
+  // Sample points for centroids
+  auto const sample_points = data_points | sample(k);
 
   // Initialize centroids with a sample of K points from data_points
-  using r3v::zip;
   if constexpr(std::floating_point<pt_value_t>) //
   {
-    auto const centroids = sample(data_points, k);
-
-    return to<id_centroids_t>(zip(ids, centroids));
-
+    return to<id_centroids_t>(zip(ids, sample_points));
   } else {
     // data_points here has integral value types 'T'
     // centroids (which get updated with means) have floating point
-    // value types So the sampled points' value types need to match
-    using data_pt_t =
-    DataPoint<pt_value_t, data_point_size_v<data_point_t<PTS_R>>>;
-    using r3v::transform;
+    // value types so the sampled points' value types need to match
+    auto constexpr point_size =
+    data_point_size_v<data_point_t<PTS_R>>;
+    
+    using data_pt_t = DataPoint<pt_value_t, point_size>;
 
-    auto const centroids =
-    data_points
-    | transform([](data_pt_t const& pt)
-                { return static_cast<centroid_t<PTS_R>>(pt); })
-    | sample(k);
+    auto const to_centroids = r3v::transform([](data_pt_t const& pt)
+                             { return centroid_t<PTS_R>(pt); });
 
-    return to<id_centroids_t>(zip(ids, centroids));
+    return to<id_centroids_t>(zip(ids, sample_points | to_centroids));
   }
 }
 
