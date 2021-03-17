@@ -1,4 +1,4 @@
-<img src="https://i.imgur.com/RBXzdQ8.png" alt="drawing" width="550"/>
+<img src="https://i.imgur.com/RBXzdQ8.png" alt="drawing" width="650"/>
 #### Infographic made by [spiyer99](https://github.com/spiyer99)
 
 ## Demo
