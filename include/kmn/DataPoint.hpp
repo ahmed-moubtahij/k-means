@@ -2,10 +2,13 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <range/v3/view/transform.hpp>
 
 namespace kmn {
 
 namespace stdr = std::ranges;
+namespace rng = ranges;
+namespace rnv = rng::views;
 
 template<typename T>
 concept arithmetic = std::integral<T> or std::floating_point<T>;
@@ -60,30 +63,12 @@ struct DataPoint final: private std::array<T, D>
     return res;
   }
 
-  // operator/ overload for floating point value type;
-  // result's value type matches it
   [[nodiscard]] constexpr
   auto operator/(arithmetic auto n) const
-  -> DataPoint<value_type, D>
-    requires(std::floating_point<value_type>)
   {
-    DataPoint<value_type, D> res;
-    stdr::transform(*this, res.begin(),
-                    [n](value_type e)
-                    { return e / static_cast<value_type>(n); });
-    return res;
-  }
-
-  // operator/ overload for integer T => result's value type = double
-  [[nodiscard]] constexpr
-  auto operator/(arithmetic auto n) const
-  -> DataPoint<double, D>
-  {
-    DataPoint<double, D> res;
-    stdr::transform(*this, res.begin(),
-                    [n](value_type e)
-                    { return e / static_cast<double>(n); });
-    return res;
+    return DataPoint<double, D>
+           (rnv::transform(*this, 
+            [n](T e){ return e / static_cast<double>(n); }));
   }
 
 };
@@ -92,3 +77,14 @@ template<arithmetic T, typename... Us>
 DataPoint(T, Us...) -> DataPoint<T, sizeof...(Us) + 1>;
 
 } // namespace kmn
+
+template<typename T, std::size_t D>
+struct ranges::range_cardinality<kmn::DataPoint<T, D>>
+    : std::integral_constant<ranges::cardinality,
+                             static_cast<ranges::cardinality>(D)>
+{ };
+
+template<typename T, std::size_t D>
+struct ranges::range_cardinality<kmn::DataPoint<T, D> const>
+    : ranges::range_cardinality<kmn::DataPoint<T, D>>
+{ };
