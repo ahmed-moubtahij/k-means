@@ -1,4 +1,4 @@
-![alt text](https://i.imgur.com/RBXzdQ8.png)
+<img src="https://i.imgur.com/RBXzdQ8.png" alt="drawing" width="550"/>
 #### Infographic made by [spiyer99](https://github.com/spiyer99)
 
 ## Demo
