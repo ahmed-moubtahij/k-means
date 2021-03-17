@@ -3,6 +3,7 @@
 #include <array>
 #include <cassert>
 #include <range/v3/view/transform.hpp>
+#include <type_traits>
 
 namespace kmn {
 
