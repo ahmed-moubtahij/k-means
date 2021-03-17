@@ -2,7 +2,7 @@
 #### Infographic made by [spiyer99](https://github.com/spiyer99)
 
 ## Demo
-### See: https://godbolt.org/z/T4cfoE (may not be up to date with the most recent code).
+### See: https://godbolt.org/z/zTvbcK (may not be up to date with the most recent code).
 ```cpp
 using fmt::print, std::array, kmn::DataPoint;
 using kmn::print_clusters, kmn::k_means;
