@@ -3,8 +3,6 @@
 #include <array>
 #include <cassert>
 
-//test
-
 namespace kmn {
 
 namespace stdr = std::ranges;
