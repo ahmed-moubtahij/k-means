@@ -48,19 +48,11 @@ struct DataPoint final: private std::array<T, D>
     stdr::copy(std::move(r), begin());
   }
 
-  // operator+ is a hidden friend because:
-  // f(a, b) considers implicit conversion for a and b
-  // whereas a.f(b) only considers it for b
-  // meaning "a + b" and "b + a" might have different behavior
-  // Hidden -only found through ADL- friends are preferred
-  // for symmetric operations
   [[nodiscard]] friend constexpr
   auto operator+(DataPoint const& lhs,
-                 DataPoint const& rhs) -> DataPoint
+                 DataPoint const& rhs)
   {
-    DataPoint res;
-    stdr::transform(lhs, rhs, res.begin(), std::plus{});
-    return res;
+    return DataPoint(rng::transform2_view(lhs, rhs, std::plus{}));
   }
 
   [[nodiscard]] constexpr
@@ -78,6 +70,11 @@ DataPoint(T, Us...) -> DataPoint<T, sizeof...(Us) + 1>;
 
 } // namespace kmn
 
+// Customization point for specifying the cardinality of ranges
+// range-v3/include/range/v3/range/traits.hpp#L121
+// This specialization is needed by views::transform and ranges::transform2_view
+// for DataPoint to retain *private* inheritance; ranges::test_cardinality tries to access it
+// Filed bug under https://github.com/ericniebler/range-v3/issues/1614
 template<typename T, std::size_t D>
 struct ranges::range_cardinality<kmn::DataPoint<T, D>>
     : std::integral_constant<ranges::cardinality,
