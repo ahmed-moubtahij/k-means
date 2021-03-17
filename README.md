@@ -71,10 +71,6 @@ At the time of writing this, I'm an undergrad in Systems Engineering, and this i
 You may then execute the provided example to ensure everything works e.g. `./build/src/demo`.
 
 ## TODO
-- Get it working (if the implementations allow it) in clang and msvc; Note: These shouldn't be issues after the complete move to `ranges::views`
-    - clang hasn't implemented `std::views::iota` yet; https://godbolt.org/z/WdnPbE
-    - _tre@includecpp_: I tried compiling to check things MSVC is missing. IIRC, they're: Abbreviated function templates, optional typename, and `std::ranges::iota_view`. `iota_view` implementation just got merged [expected to be in VS 16.10 Preview 2]. https://github.com/microsoft/STL/pull/1693
-        - abbreviated function templates are in VS 16.9 
 - Clang-tidy
 - Write unit tests (`catch2`).
     - Check https://youtu.be/YbgH7yat-Jo?t=1455 and https://www.youtube.com/watch?v=Ob5_XZrFQH0&t=589s
