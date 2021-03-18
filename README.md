@@ -98,4 +98,3 @@ You may then execute the provided example to ensure everything works e.g. `./bui
 
 ## Thanks
 My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: _sarah_, _Léo_, _marcorubini_, _oktal_, _Lesley Lai_ and _ninjawedding_. _Lorely_ and _melak-47_ for the CMake stuff. _tre_, _Nicole Mazzuca_ and _Robert Schumacher_ for the vcpkg stuff.
->>>>>>> 159d3f1d364cfb9f32b1c6fbd9dcb1c93c6775e7
