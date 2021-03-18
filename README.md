@@ -1,8 +1,8 @@
-![alt text](https://i.imgur.com/RBXzdQ8.png)
+<img src="https://i.imgur.com/RBXzdQ8.png" alt="drawing" width="650"/>
 #### Infographic made by [spiyer99](https://github.com/spiyer99)
 
 ## Demo
-### See: https://godbolt.org/z/T4cfoE (may not be up to date with the most recent code).
+### See: https://godbolt.org/z/zTvbcK (may not be up to date with the most recent code).
 ```cpp
 using fmt::print, std::array, kmn::DataPoint;
 using kmn::print_clusters, kmn::k_means;
@@ -71,11 +71,6 @@ At the time of writing this, I'm an undergrad in Systems Engineering, and this i
 You may then execute the provided example to ensure everything works e.g. `./build/src/demo`.
 
 ## TODO
-- Drop `std::ranges::views` and stick with `range::views` instead of mixing them.
-- Get it working (if the implementations allow it) in clang and msvc; Note: These won't be issues after the complete move to `range-v3`
-    - clang hasn't implemented `std::views::iota` yet; https://godbolt.org/z/WdnPbE
-    - _tre@includecpp_: I tried compiling to check things MSVC is missing. IIRC, they're: Abbreviated function templates, optional typename, and `std::ranges::iota_view`. `iota_view` implementation just got merged [expected to be in VS 16.10 Preview 2]. https://github.com/microsoft/STL/pull/1693
-        - abbreviated function templates are in VS 16.9 
 - Clang-tidy
 - Write unit tests (`catch2`).
     - Check https://youtu.be/YbgH7yat-Jo?t=1455 and https://www.youtube.com/watch?v=Ob5_XZrFQH0&t=589s
@@ -103,3 +98,4 @@ You may then execute the provided example to ensure everything works e.g. `./bui
 
 ## Thanks
 My thanks go to a few competent minds from the #includecpp Discord who helped me in understanding the C++ ins and outs to write this code: _sarah_, _Léo_, _marcorubini_, _oktal_, _Lesley Lai_ and _ninjawedding_. _Lorely_ and _melak-47_ for the CMake stuff. _tre_, _Nicole Mazzuca_ and _Robert Schumacher_ for the vcpkg stuff.
+>>>>>>> 159d3f1d364cfb9f32b1c6fbd9dcb1c93c6775e7
