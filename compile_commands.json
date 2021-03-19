@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/ayenem/k-means/src",
+  "command": "/usr/bin/c++  -DFMT_LOCALE -I/home/ayenem/k-means/include -isystem /home/ayenem/k-means/vcpkg_installed/x64-linux/include  -O2 -g -DNDEBUG   -fdiagnostics-color=always --coverage -O0 -g -fsanitize=address,leak,undefined -Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wpedantic -Wconversion -Wsign-conversion -Wnull-dereference -Wdouble-promotion -Wformat=2 -Werror -Wmisleading-indentation -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wuseless-cast -std=gnu++2a -o CMakeFiles/demo.dir/demo.cpp.o -c /home/ayenem/k-means/src/demo.cpp",
+  "file": "/home/ayenem/k-means/src/demo.cpp"
+}
+]
