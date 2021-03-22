@@ -1,5 +1,5 @@
 option(ENABLE_CPPCHECK "Enable static analysis with cppcheck" OFF)
-option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Builds with clang-tidy, if available. Defaults to On." On)
+option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Builds with clang-tidy, if available. Defaults to ON." ON)
 option(ENABLE_INCLUDE_WHAT_YOU_USE "Enable static analysis with include-what-you-use" OFF)
 
 if(ENABLE_CPPCHECK)
