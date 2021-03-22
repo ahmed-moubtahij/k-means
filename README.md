@@ -80,15 +80,15 @@ You may then execute the provided example to ensure everything works e.g. `./bui
 - Set up CI.
     - _ninjawedding@includecpp_: if you've got CI configured you should have at least one test configuration that runs your tests with sanitizers enabled.
     - Need to benchmark compile and run times.
+- Measure compile-time & run-time.
 - Subject further refactorings to TDD.
 - See if k_means_impl's steps can be made into custom views (see https://youtu.be/d_E-VLyUnzc?list=PLco7M25q_3hCWAYODpIDsq9_IH9oXf04W&t=1035); it's currently operating with eager intermediate operations.
-    - "Just as with borrowed ranges, a type can opt in to being a view using the `enable_view` trait, or by inherting from `ranges::views_base`.
+    - "Just as with borrowed ranges, a type can opt in to being a view using the `enable_view` trait, or by inheriting from `ranges::views_base`.
 - Adapt implementation to rvalue inputs (e.g. spans, adapted views, borrowed ranges) either with rvalue ref parameter overload, or with a specialization returning a `kmn::dangling_reference` empty object when appropriate for handling the returned `data_points` and `out_indices` references.
 - Prettify `print_kmn_result` with a tabular format display.
 - Look into how to detect moves/copies of types (including library types).
 - Make sure these are used as they should be: move semantics, RVO, in-place construction, `explicit` ctors, `noexcept`...etc.
 - Look into SBO for the returned vectors.
-- Measure compile & run performance.
 - Write a blog?
 - Provide an interface for file input.
 - Convergence criteria instead of `n` iterations.
