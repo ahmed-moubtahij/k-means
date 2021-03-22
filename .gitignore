@@ -4,7 +4,7 @@ build/
 CMakeCache.txt
 CMakeFiles/
 CMakeSettings.json
-MakeFile/
+Makefile
 cmake_install.cmake
 compile_commands.json
 vcpkg-manifest-install.log
