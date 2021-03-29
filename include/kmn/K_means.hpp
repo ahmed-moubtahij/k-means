@@ -139,7 +139,7 @@ auto init_centroids(PTS_R const& data_points, size_type k)
 
   // Initialize centroid ids
   auto const ids = stdv::iota(size_type{ 1 }, k + 1);
-  
+
   // Sample points for centroids
   auto const sample_points = data_points | sample(k);
 
@@ -153,11 +153,11 @@ auto init_centroids(PTS_R const& data_points, size_type k)
     // value types so the sampled points' value types need to match
     auto constexpr point_size =
     data_point_size_v<data_point_t<PTS_R>>;
-    
+
     using data_pt_t = DataPoint<pt_value_t, point_size>;
 
-    auto const to_centroids = rnv::transform([](data_pt_t const& pt)
-                             { return centroid_t<PTS_R>(pt); });
+    auto const to_centroids = rnv::transform(
+    [](data_pt_t const& pt) { return centroid_t<PTS_R>(pt); });
 
     return to<id_centroids_t>(zip(ids, sample_points | to_centroids));
   }
@@ -243,7 +243,8 @@ constexpr void index_points_by_centroids(auto&& out_indices,
 }
 // clang-format on
 
-[[nodiscard]] constexpr //
+[[nodiscard]] //
+//Note: Maybe constexpr when it's implemented for std::vector
 auto clusters_histogram(auto const& indices,
                         size_type k)
 -> std::vector<size_type>
