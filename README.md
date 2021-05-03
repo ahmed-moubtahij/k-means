@@ -62,11 +62,11 @@ At the time of writing this, I'm an undergrad in Systems Engineering, and this i
 
 **Build Instructions**
 ```
-    cd path/to/your/folder
-    git clone https://github.com/Ayenem/k-means.git --recursive
-    cd k-means
-    cmake -B build
-    cmake --build build
+cd path/to/your/folder
+git clone https://github.com/Ayenem/k-means.git --recursive
+cd k-means
+cmake -B build
+cmake --build build
 ```
 You may then execute the provided example to ensure everything works e.g. `./build/src/demo`.
 
