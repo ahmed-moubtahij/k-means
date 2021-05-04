@@ -6,17 +6,12 @@
 #include <numeric>
 #include <optional>
 #include <range/v3/range/conversion.hpp>
-//std::ranges doesn't have to(_container)
 #include <range/v3/view/filter.hpp>
-//Used when pipe chain contains a range-v3 adaptor
 #include <range/v3/view/map.hpp>
-//Used when pipe chain contains a range-v3 adaptor
 #include <range/v3/view/sample.hpp>
-//Used over std::ranges::sample for pipability & lazy semantics
 #include <range/v3/view/transform.hpp>
-//Used when pipe chain contains a range-v3 adaptor
 #include <range/v3/view/zip.hpp>
-//std::ranges doesn't have zip
+#include <range/v3/view/iota.hpp>
 #include <ranges>
 #include <vector>
 
@@ -138,7 +133,7 @@ auto init_centroids(PTS_R const& data_points, size_type k)
   using id_centroids_t = indexed_centroids_t<PTS_R>;
 
   // Initialize centroid ids
-  auto const ids = stdv::iota(size_type{ 1 }, k + 1);
+  auto const ids = rnv::iota(size_type{ 1 }, k + 1);
 
   // Sample points for centroids
   auto const sample_points = data_points | sample(k);
