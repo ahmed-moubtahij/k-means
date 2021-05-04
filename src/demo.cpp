@@ -2,7 +2,7 @@
 
 int main()
 {
-  using kmn::DataPoint, kmn::print_kmn_result, kmn::k_means;
+  using kmn::DataPoint;
   // INPUT ranges
   auto const int_arr_df =
   std::array{ DataPoint(1, 2, 3),    DataPoint(4, 5, 6),
@@ -48,8 +48,8 @@ int main()
   std::size_t const n{ 10 };
 
   // CALL & DISPLAY RESULT
-  if(auto&& kmn_result = k_means(int_arr_df, out_indices, k, n)) {
-    print_kmn_result(std::move(kmn_result));
+  if(auto&& kmn_result = kmn::k_means(int_arr_df, out_indices, k, n)) {
+    kmn::print_kmn_result(std::move(kmn_result));
   } else {
     fmt::print("k_means returned std::nullopt\n");
   }
