@@ -1,18 +1,16 @@
-#include <concepts>
-#include <algorithm>
-#include <array>
-#include <fmt/ranges.h>
 #include <kmn/DataPoint.hpp>
-#include <numeric>
-#include <optional>
-#include <range/v3/range/conversion.hpp>
+#include <fmt/ranges.h>
+#include <range/v3/range/conversion.hpp> // ranges::to
 #include <range/v3/view/filter.hpp>
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/sample.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip.hpp>
 #include <range/v3/view/iota.hpp>
-#include <ranges>
+#include <concepts>
+#include <algorithm>
+#include <numeric> // std::transform_reduce
+#include <optional>
 #include <vector>
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
