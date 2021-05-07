@@ -1,6 +1,5 @@
 ---
-Checks:           'abseil-*,boost-*,bugprone-*,cert-*,clang-analyzer-*,cppcoreguildelines-*,google-*,misc-*,modernize-*,performance-*,portability-*,readability-*,-bugprone-exception-escape,-cert-msc32-c,-cert-msc51-cpp,-clang-diagnostic-missing-prototypes,-clang-diagnostic-unused-command-line-argument,-google-runtime-int,-google-runtime-references,-misc-no-recursion,-misc-non-private-member-variables-in-classes,-modernize-use-trailing-return-type,-readability-function-size,-readability-named-parameter,-readability-qualified-auto'
+Checks:           '*'
 WarningsAsErrors: '*'
-WarningsAsErrors: '*'
-HeaderFilterRegex: ''
+HeaderFilterRegex: 'kmn/.*'
 FormatStyle:     none
