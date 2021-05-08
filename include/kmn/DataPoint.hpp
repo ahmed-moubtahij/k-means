@@ -1,10 +1,10 @@
-#ifndef DATA_POINT_HPP
-#define DATA_POINT_HPP
+#ifndef KMN_DATAPOINT_HPP
+#define KMN_DATAPOINT_HPP
 
-#include <concepts>
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <concepts>
 #include <range/v3/view/transform.hpp>
 #include <type_traits>
 
@@ -31,9 +31,9 @@ struct DataPoint final: private std::array<T, D>
 
   constexpr DataPoint() noexcept = default;
   constexpr DataPoint(DataPoint const&) noexcept = default;
-  constexpr DataPoint& operator=(DataPoint const&) noexcept = default;
+  constexpr auto operator=(DataPoint const&) noexcept -> DataPoint& = default;
   constexpr DataPoint(DataPoint&&) noexcept = default;
-  constexpr DataPoint& operator=(DataPoint&&) noexcept = default;
+  constexpr auto operator=(DataPoint&&) noexcept -> DataPoint& = default;
   constexpr ~DataPoint() noexcept = default;
 
   // clang-format off
