@@ -1,6 +1,6 @@
 #include <kmn/K_means.hpp>
 
-int main()
+auto main() -> int
 {
   using kmn::DataPoint;
   // INPUT ranges
