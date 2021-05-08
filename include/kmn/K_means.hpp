@@ -306,6 +306,7 @@ class k_means_result {
   // clang-format on
 public:
   k_means_result() = delete;
+  ~k_means_result() = default;
   k_means_result& operator=(k_means_result const&) = delete;
 
   k_means_result(k_means_result const&) noexcept = default;
