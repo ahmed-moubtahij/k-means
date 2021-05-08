@@ -1,5 +1,5 @@
 ---
-Checks:            '*'
+Checks:            '*, -fuchsia-trailing-return warnings, -fuchsia-overloaded-operator, -fuchsia-default-arguments-calls'
 WarningsAsErrors:  '*'
 HeaderFilterRegex: 'kmn/.*'
 FormatStyle:        none
