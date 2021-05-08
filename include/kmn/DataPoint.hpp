@@ -1,3 +1,6 @@
+#ifndef DATA_POINT_HPP
+#define DATA_POINT_HPP
+
 #include <concepts>
 #include <algorithm>
 #include <array>
@@ -86,3 +89,5 @@ template<typename T, std::size_t D>
 struct ranges::range_cardinality<kmn::DataPoint<T, D> const>
     : ranges::range_cardinality<kmn::DataPoint<T, D>>
 { };
+
+#endif
