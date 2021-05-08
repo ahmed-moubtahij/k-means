@@ -34,6 +34,7 @@ struct DataPoint final: private std::array<T, D>
   constexpr DataPoint& operator=(DataPoint const&) noexcept = default;
   constexpr DataPoint(DataPoint&&) noexcept = default;
   constexpr DataPoint& operator=(DataPoint&&) noexcept = default;
+  constexpr ~DataPoint() noexcept = default;
 
   // clang-format off
   template<std::convertible_to<value_type> ...Ts>
