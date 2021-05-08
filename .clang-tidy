@@ -1,5 +1,5 @@
 ---
-Checks:           '*'
-WarningsAsErrors: '*'
+Checks:            '*'
+WarningsAsErrors:  '*'
 HeaderFilterRegex: 'kmn/.*'
-FormatStyle:     none
+FormatStyle:        none
