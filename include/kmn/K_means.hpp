@@ -1,16 +1,19 @@
-#include <kmn/DataPoint.hpp>
+#ifndef KMN_K_MEANS_HPP
+#define KMN_K_MEANS_HPP
+
+#include <algorithm>
+#include <concepts>
 #include <fmt/ranges.h>
+#include <kmn/DataPoint.hpp>
+#include <numeric> // std::transform_reduce
+#include <optional>
 #include <range/v3/range/conversion.hpp> // ranges::to
 #include <range/v3/view/filter.hpp>
+#include <range/v3/view/iota.hpp>
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/sample.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip.hpp>
-#include <range/v3/view/iota.hpp>
-#include <concepts>
-#include <algorithm>
-#include <numeric> // std::transform_reduce
-#include <optional>
 #include <vector>
 
 #define FWD(x) static_cast<decltype(x)&&>(x)
@@ -307,10 +310,10 @@ class k_means_result {
 public:
   k_means_result() = delete;
   ~k_means_result() = default;
-  k_means_result& operator=(k_means_result const&) = delete;
+  auto operator=(k_means_result const&) -> k_means_result& = delete;
 
   k_means_result(k_means_result const&) noexcept = default;
-  k_means_result& operator=(k_means_result&&) noexcept = default;
+  auto operator=(k_means_result&&) noexcept -> k_means_result& = default;
   k_means_result(k_means_result&&) noexcept = default;
 
   constexpr k_means_result(CENTROIDS_R centroids,
@@ -471,3 +474,5 @@ struct k_means_fn
 constexpr inline k_means_fn k_means{};
 
 } // namespace kmn
+
+#endif
