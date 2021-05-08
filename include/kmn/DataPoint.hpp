@@ -39,7 +39,7 @@ struct DataPoint final: private std::array<T, D>
   // clang-format off
   template<std::convertible_to<value_type> ...Ts>
   constexpr explicit(sizeof...(Ts) == 1)
-  DataPoint(Ts... coords) noexcept // NOLINT(google-explicit-constructor)
+  DataPoint(Ts... coords) noexcept // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
     requires(sizeof...(coords) == D)
   : std::array<T, D>{ coords... }
   { }
