@@ -456,7 +456,7 @@ struct k_means_fn
        not std::in_range<size_type>(pts_dist))
     { return std::nullopt; } // Fall if distance() is signed
     
-    else if(auto const pts_size = static_cast<size_type>(pts_dist);
+    else if(auto const pts_size = static_cast<size_type>(pts_dist); // NOLINT(readability-else-after-return)
             pts_size < k or pts_size != stdr::size(out_indices))
     { return std::nullopt; }
 
