@@ -11,5 +11,5 @@ target_link_libraries(
 
 if(${PROJECT_NAME}_ENABLE_CLANG_TIDY)
     set_target_properties(demo PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
-    message(STATUS "set target properties for clang tidy")
+    message(STATUS "Set target properties for clang tidy (Run on build)")
 endif()
