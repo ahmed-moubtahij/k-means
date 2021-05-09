@@ -23,7 +23,6 @@ namespace kmn {
 using size_type = std::size_t;
 
 namespace stdr = std::ranges;
-namespace stdv = std::views;
 namespace r = ranges; // range-v3
 namespace rv = r::views;
 
