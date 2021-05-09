@@ -64,20 +64,15 @@ namespace hlpr {
   inline constexpr size_type data_point_size_v = //
   data_point_size<T>::value;
 
-  /********************** data_point_t ***************************/
-  using stdr::range_value_t;
-  template<typename R> using data_point_t = range_value_t<R>;
   /*********************** point_value_t *************************/
   template<typename R>
-  using point_value_t = typename data_point_t<R>::value_type;
+  using point_value_t = typename stdr::range_value_t<R>::value_type;
   /************************** Concepts ***************************/
   template<typename R>
-  concept data_points_range = is_data_point_v<range_value_t<R>>;
+  concept data_points_range = hlpr::is_data_point_v<stdr::range_value_t<R>>;
   template<typename R>
-  concept unsigned_range = std::unsigned_integral<range_value_t<R>>;
+  concept unsigned_range = std::unsigned_integral<stdr::range_value_t<R>>;
 } // namespace hlpr
-
-using namespace hlpr;
 
 // sqr_dist: computes euclidean square distance
 //           between two data points
@@ -117,8 +112,8 @@ struct distance_from
 // clang-format on
 template<typename PTS_R>
 using centroid_t =
-select_centroid_t<point_value_t<PTS_R>,
-                  data_point_size_v<data_point_t<PTS_R>>>;
+hlpr::select_centroid_t<hlpr::point_value_t<PTS_R>,
+                        hlpr::data_point_size_v<stdr::range_value_t<PTS_R>>>;
 
 template<typename PTS_R>
 using indexed_centroids_t =
@@ -129,7 +124,7 @@ template<typename PTS_R>
 auto init_centroids(PTS_R const& data_points, size_type k)
 -> indexed_centroids_t<PTS_R>
 {
-  using pt_value_t = point_value_t<PTS_R>;
+  using pt_value_t = hlpr::point_value_t<PTS_R>;
   using rv::sample, r::to, rv::zip;
   using id_centroids_t = indexed_centroids_t<PTS_R>;
 
@@ -148,7 +143,7 @@ auto init_centroids(PTS_R const& data_points, size_type k)
     // centroids (which get updated with means) have floating point
     // value types so the sampled points' value types need to match
     auto constexpr point_size =
-    data_point_size_v<data_point_t<PTS_R>>;
+    hlpr::data_point_size_v<stdr::range_value_t<PTS_R>>;
 
     using data_pt_t = DataPoint<pt_value_t, point_size>;
 
@@ -439,7 +434,7 @@ auto k_means_impl(PTS_R&& data_points, //
 // clang-format off
 struct k_means_fn
 { 
-  template<data_points_range PTS_R, unsigned_range IDX_R>
+  template<hlpr::data_points_range PTS_R, hlpr::unsigned_range IDX_R>
   [[nodiscard]] constexpr
   auto operator()(PTS_R&& data_points,
                   // Not mutated but a reference to it is returned;
