@@ -274,8 +274,8 @@ class k_means_result {
 
   struct const_iterator
   {
-    k_means_result const& parent; // NOLINT
-    size_type cluster_idx; // NOLINT
+    k_means_result const& parent; // NOLINT
+    size_type cluster_idx; // NOLINT
 
     struct cluster
     {
