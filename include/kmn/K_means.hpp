@@ -317,9 +317,9 @@ public:
                            SIZES_R cluster_sizes,
                            INPUT_R points,
                            OUTPUT_R out_indices) noexcept
-  : m_centroids{ centroids }, //
-    m_cluster_sizes{ cluster_sizes }, //
-    m_points{ points }, //
+  : m_centroids{ std::move(centroids) }, //
+    m_cluster_sizes{ std::move(cluster_sizes) }, //
+    m_points{ std::move(points) }, //
     m_out_indices{ out_indices }
   { }
 
