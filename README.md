@@ -71,7 +71,6 @@ cmake --build build
 You may then execute the provided example to ensure everything works e.g. `./build/src/demo`.
 
 ## TODO
-- Clang-tidy
 - Cppcheck
 - Include-what-you-use
 - Write unit tests (`catch2`).
