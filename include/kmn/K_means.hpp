@@ -90,10 +90,12 @@ auto sqr_distance(DataPoint<T1, D> const& dp1, //
 // distance_from: Function Object Comparator
 //                of distances from two points to a reference point
 template<typename T, size_type D> //
-struct distance_from
+class distance_from
 {
   using target_point_t = DataPoint<T, D>;
   target_point_t m_pt;
+
+  public:
 
   distance_from() = delete;
 
