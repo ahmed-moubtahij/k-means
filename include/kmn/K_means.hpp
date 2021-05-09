@@ -16,7 +16,7 @@
 #include <range/v3/view/zip.hpp>
 #include <vector>
 
-#define FWD(x) static_cast<decltype(x)&&>(x)
+#define FWD(x) static_cast<decltype(x)&&>(x) // NOLINT
 
 namespace kmn {
 
