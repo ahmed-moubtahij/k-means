@@ -453,13 +453,11 @@ struct k_means_fn
     // distance() is used over size() to support non-sized range
     // arguments such as "data_points_arg | filter(...)"
     if(auto const pts_dist = stdr::distance(data_points);
-       not std::in_range<size_type>(pts_dist))
-    { return std::nullopt; } // Fall if distance() is signed
+       not std::in_range<size_type>(pts_dist) // Fall if distance is signed
+       or static_cast<size_type>(pts_dist) < k
+       or static_cast<size_type>(pts_dist) != stdr::size(out_indices))
+    { return std::nullopt; } 
     
-    else if(auto const pts_size = static_cast<size_type>(pts_dist); // NOLINT(readability-else-after-return)
-            pts_size < k or pts_size != stdr::size(out_indices))
-    { return std::nullopt; }
-
     return { k_means_impl<PTS_R, IDX_R>(FWD(data_points),
                                         FWD(out_indices),
                                         k, n)
