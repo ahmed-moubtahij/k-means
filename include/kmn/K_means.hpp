@@ -97,7 +97,7 @@ struct distance_from
 
   distance_from() = delete;
 
-  constexpr distance_from(target_point_t const& pt) //
+  constexpr explicit distance_from(target_point_t const& pt) //
   : m_pt{ pt }
   { }
 
