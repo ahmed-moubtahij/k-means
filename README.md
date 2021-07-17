@@ -91,6 +91,7 @@ You may then execute the provided example to ensure everything works e.g. `./bui
 - Look into how to detect moves/copies of types (including library types).
 - Make sure these are used as they should be: move semantics, RVO, in-place construction, `explicit` ctors, `noexcept`...etc.
 - Look into SBO for the returned vectors.
+      - _seph@includecpp_: There are so called static vector types that have a max size and then allocate like a regular vector if it goes beyond that
 - Write a blog?
 - Provide an interface for file input.
 - Convergence criteria instead of `n` iterations.
