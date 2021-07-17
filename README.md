@@ -92,6 +92,7 @@ You may then execute the provided example to ensure everything works e.g. `./bui
 - Make sure these are used as they should be: move semantics, RVO, in-place construction, `explicit` ctors, `noexcept`...etc.
 - Look into SBO for the returned vectors.
       - _seph@includecpp_: There are so called static vector types that have a max size and then allocate like a regular vector if it goes beyond that
+      - _killerbee13@includecpp_: Boost has an SBO vector.
 - Write a blog?
 - Provide an interface for file input.
 - Convergence criteria instead of `n` iterations.
