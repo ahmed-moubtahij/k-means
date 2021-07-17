@@ -78,6 +78,7 @@ You may then execute the provided example to ensure everything works e.g. `./bui
     - A given input (with fixed `n` and `k`) will have N reference outputs which the output of a given revision of the implementation has to compare against (i.e. references' mean or any one of them) within a tolerance.
         - The comparison would be done by euclidean distance between output ranges of indices.
     - Do this for differently typed (range-wise, value type-wise, cv-qualification-wise) X inputs.    
+- Fuzz testing
 - Set up CI.
     - _ninjawedding@includecpp_: if you've got CI configured you should have at least one test configuration that runs your tests with sanitizers enabled.
     - Need to benchmark compile and run times.
