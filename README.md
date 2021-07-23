@@ -50,7 +50,7 @@ A call to `k_means` returns a `std::optional` object with potentially useful inf
 A data point is to be wrapped with the `kmn::DataPoint<T, D>` type, with `T` an arithmetic type and `D` the point's dimensionality. `T` and `D` can be implicit through CTAD as shown in the above example. All data points must naturally have the same dimensionality.
 
 ## Context
-At the time of writing this, I'm an undergrad in Systems Engineering, and this is intended as a practice project that ideally evolves into something useful.
+This is intended as a practice project that ideally evolves into something useful.
 
 ## How do I use this?
 
