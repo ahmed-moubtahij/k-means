@@ -71,7 +71,6 @@ cmake --build build
 You may then execute the provided example to ensure everything works e.g. `./build/src/demo`.
 
 ## TODO
-- Cppcheck
 - Include-what-you-use
 - Write unit tests (`catch2`).
     - Check https://youtu.be/YbgH7yat-Jo?t=1455 and https://www.youtube.com/watch?v=Ob5_XZrFQH0&t=589s
