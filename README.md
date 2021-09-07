@@ -88,9 +88,9 @@ You may then execute the provided example to ensure everything works e.g. `./bui
 - Look into how to detect moves/copies of types (including library types).
 - Make sure these are used as they should be: move semantics, RVO, in-place construction, `explicit` ctors, `noexcept`...etc.
 - Look into SBO for the returned vectors; SBO for up to a reasonable size (2 for `k`?) and allocate beyond that.
-      - _seph@includecpp_: There are so called static vector types that have a max size and then allocate like a regular vector if it goes beyond that
-      - _killerbee13@includecpp_: Boost has an SBO vector.
-      - _Darrell Wright@includecpp_: reducing the smaller allocations by vector can have a good perf benefit.  something like a min reserve of 1-4kb. `vecT.reserve( 4096/sizeof(T) )` depending on allocation patterns, SBO may not help.  Also, it has a potential hit with move being slower
+    - _seph@includecpp_: There are so called static vector types that have a max size and then allocate like a regular vector if it goes beyond that
+    - _killerbee13@includecpp_: Boost has an SBO vector.
+    - _Darrell Wright@includecpp_: reducing the smaller allocations by vector can have a good perf benefit.  something like a min reserve of 1-4kb. `vecT.reserve( 4096/sizeof(T) )` depending on allocation patterns, SBO may not help.  Also, it has a potential hit with move being slower
 - Write a blog?
 - Provide an interface for file input.
 - Convergence criteria instead of `n` iterations.
