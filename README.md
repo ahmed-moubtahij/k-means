@@ -79,8 +79,7 @@ You may then execute the provided example to ensure everything works e.g. `./bui
 - Fuzz testing
 - Set up CI.
     - _ninjawedding@includecpp_: if you've got CI configured you should have at least one test configuration that runs your tests with sanitizers enabled.
-    - Need to benchmark compile and run times.
-- Measure compile-time & run-time.
+    - Benchmark compile and run times.
 - Subject further refactorings to TDD.
 - See if k_means_impl's steps can be made into custom views (see https://youtu.be/d_E-VLyUnzc?list=PLco7M25q_3hCWAYODpIDsq9_IH9oXf04W&t=1035); it's currently operating with eager intermediate operations.
     - "Just as with borrowed ranges, a type can opt in to being a view using the `enable_view` trait, or by inheriting from `ranges::views_base`.
